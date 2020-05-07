@@ -7,16 +7,17 @@
 #include <memory>
 #include <limits.h>
 
-/*#include <ojph_arch.h>
-#include <ojph_file.h>
-#include <ojph_mem.h>
-#include <ojph_params.h>
-#include <ojph_codestream.h>
-*/
+#include "openjpeg.h"
+#include <string.h>
+#include <stdlib.h>
+#define EMSCRIPTEN_API __attribute__((used))
+#define J2K_MAGIC_NUMBER 0x51FF4FFF
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
 #endif
+
+#include "BufferStream.hpp"
 
 #include "FrameInfo.hpp"
 #include "Point.hpp"
@@ -100,17 +101,153 @@ class J2KDecoder {
     return Size(0,0);
   }
 
+  static void error_callback(const char *msg, void *client_data) {
+      (void)client_data;
+      printf("[ERROR] %s", msg);
+  }
+  static void warning_callback(const char *msg, void *client_data) {
+      (void)client_data;
+      printf("[WARNING] %s", msg);
+  }
+  static void info_callback(const char *msg, void *client_data) {
+      (void)client_data;
+      printf("[INFO] %s", msg);
+  }
+
   /// <summary>
   /// Decodes the encoded HTJ2K bitstream.  The caller must have copied the
   /// HTJ2K encoded bitstream into the encoded buffer before calling this
   /// method, see getEncodedBuffer() and getEncodedBytes() above.
   /// </summary>
   void decode() {
-    /*ojph::codestream codestream;
-    ojph::mem_infile mem_file;
-    mem_file.open(encoded_.data(), encoded_.size());
-    readHeader_(codestream, mem_file);
-    decode_(codestream, frameInfo_, 0);*/
+    opj_dparameters_t parameters;
+    opj_codec_t* l_codec = NULL;
+    opj_image_t* image = NULL;
+    opj_stream_t *l_stream = NULL;
+
+    // detect stream type
+    if( ((OPJ_INT32*)encoded_.data())[0] == J2K_MAGIC_NUMBER ){
+        l_codec = opj_create_decompress(OPJ_CODEC_J2K);
+        // printf("OPJ_CODEC_J2K\n");
+    }else{
+        l_codec = opj_create_decompress(OPJ_CODEC_JP2);
+        // printf("OPJ_CODEC_JP2\n");
+    }
+
+    opj_set_info_handler(l_codec, info_callback,00);
+    opj_set_warning_handler(l_codec, warning_callback,00);
+    opj_set_error_handler(l_codec, error_callback,00);
+
+    opj_set_default_decoder_parameters(&parameters);
+
+    // set stream
+    opj_buffer_info_t buffer_info;
+    buffer_info.buf = encoded_.data();
+    buffer_info.cur = encoded_.data();
+    buffer_info.len = encoded_.size();
+    l_stream = opj_stream_create_buffer_stream(&buffer_info, OPJ_TRUE);
+
+    /* Setup the decoder decoding parameters using user parameters */
+    if ( !opj_setup_decoder(l_codec, &parameters) ){
+        printf("[ERROR] opj_decompress: failed to setup the decoder\n");
+        opj_stream_destroy(l_stream);
+        opj_destroy_codec(l_codec);
+        return;
+    }
+
+    /* Read the main header of the codestream and if necessary the JP2 boxes*/
+    if(! opj_read_header(l_stream, l_codec, &image)){
+        printf("[ERROR] opj_decompress: failed to read the header\n");
+        opj_stream_destroy(l_stream);
+        opj_destroy_codec(l_codec);
+        opj_image_destroy(image);
+        return;
+    }
+
+    /* decode the image */
+    if (!opj_decode(l_codec, l_stream, image)) {
+        printf("[ERROR] opj_decompress: failed to decode tile!\n");
+        opj_destroy_codec(l_codec);
+        opj_stream_destroy(l_stream);
+        opj_image_destroy(image);
+        return;
+    }
+
+    frameInfo_.width = image->x1;
+    frameInfo_.height = image->y1;
+    frameInfo_.componentCount = image->numcomps;
+    //*prec = image->comps[0].prec;
+    frameInfo_.isSigned = image->comps[0].sgnd;
+    frameInfo_.bitsPerSample = image->comps[0].prec; // TODO: verify this is in fact bitsPerSample??  since bpp always returns 0
+    //*colorSpace = image->color_space;
+
+    const size_t bytesPerPixel = (frameInfo_.bitsPerSample + 8 - 1) / 8;
+    const size_t imageSizeInBytes = frameInfo_.width * frameInfo_.height * frameInfo_.componentCount * bytesPerPixel;
+    decoded_.resize(imageSizeInBytes);
+
+    // Convert from int32 to native size
+    int comp_num;
+    for (int y = 0; y < frameInfo_.height; y++)
+    {
+      size_t lineStart = y * frameInfo_.width * frameInfo_.componentCount * bytesPerPixel;
+      if(frameInfo_.componentCount == 1) {
+        //ojph::line_buf *line = codestream.pull(comp_num, resolutionLevel);
+        int* pIn = (int*)&(image->comps[0].data[y * frameInfo_.width]);
+        if(frameInfo_.bitsPerSample <= 8) {
+          /*unsigned char* pOut = (unsigned char*)&decoded_[lineStart];
+          for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
+            int val = line->i32[x];
+            pOut[x] = std::max(0, std::min(val, UCHAR_MAX));
+          }*/
+        } else {
+          if(frameInfo_.isSigned) {
+            short* pOut = (short*)&decoded_[lineStart];
+            for (size_t x = 0; x < frameInfo_.width; x++) {
+              int val = pIn[x];//line->i32[x];
+              pOut[x] = std::max(SHRT_MIN, std::min(val, SHRT_MAX));
+            }
+          } else {
+            /*unsigned short* pOut = (unsigned short*)&decoded_[lineStart] ;
+            for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
+                int val = line->i32[x];
+                pOut[x] = std::max(0, std::min(val, USHRT_MAX));
+            }
+            */
+          }
+        }
+      } /*else {
+        for (int c = 0; c < frameInfo.componentCount; c++)
+        {
+          ojph::line_buf *line = codestream.pull(comp_num, resolutionLevel);
+          if(frameInfo.bitsPerSample <= 8) {
+            uint8_t* pOut = &decoded_[lineStart] + c;
+            for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
+              int val = line->i32[x];
+              pOut[x * frameInfo.componentCount] = std::max(0, std::min(val, UCHAR_MAX));
+            }
+          } else {
+            // This should work but has not been tested yet
+            if(frameInfo.isSigned) {
+              short* pOut = (short*)&decoded_[lineStart] + c;
+              for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
+                int val = line->i32[x];
+                pOut[x * frameInfo.componentCount] = std::max(SHRT_MIN, std::min(val, SHRT_MAX));
+              }
+            } else {
+              unsigned short* pOut = (unsigned short*)&decoded_[lineStart] + c;
+              for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
+                  int val = line->i32[x];
+                  pOut[x * frameInfo.componentCount] = std::max(0, std::min(val, USHRT_MAX));
+              }
+            }
+          }
+        }
+      }*/
+    }
+
+    opj_stream_destroy(l_stream);
+    opj_destroy_codec(l_codec);
+    opj_image_destroy(image);
   }
 
   /// <summary>
