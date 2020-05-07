@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT
 <head>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">   
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-    <script type="text/javascript" src="../../dist/openjphjs.js"></script>
+    <script type="text/javascript" src="../../dist/openjpegjs.js"></script>
 </head>
 <body>
 <div class="container">
@@ -18,7 +18,7 @@ SPDX-License-Identifier: MIT
       </p>
       <div class="row">
         <select id="imageSelector">
-          <option value="../../extern/OpenJPH/subprojects/js/html/test.j2c" selected>Lena</option>
+          <option value="../../test/fixtures/j2k/image.j2k" selected>Mystery!?!</option>
           <option value="../../test/fixtures/j2c/CT1.j2c">CT1</option>
           <option value="../../test/fixtures/j2c/CT2.j2c">CT2</option>
           <option value="../../test/fixtures/j2c/MG1.j2c">MG1</option>
@@ -290,17 +290,18 @@ SPDX-License-Identifier: MIT
     let end = performance.now();
 
     // warmup decode
-    decoder.readHeader();
-    const resolutionAtLevel = decoder.calculateSizeAtDecompositionLevel(decodeLevel);
+    //decoder.readHeader();
+    //const resolutionAtLevel = decoder.calculateSizeAtDecompositionLevel(decodeLevel);
 
-    $('#decodeLevel').text('' + decodeLevel + ' (' + resolutionAtLevel.width + 'x' + resolutionAtLevel.height + ')');
-    $('#decodeLevelRange').attr('max', decoder.getNumDecompositions());
+    //$('#decodeLevel').text('' + decodeLevel + ' (' + resolutionAtLevel.width + 'x' + resolutionAtLevel.height + ')');
+    //$('#decodeLevelRange').attr('max', decoder.getNumDecompositions());
     
 
     // Decode
     begin = performance.now(); // performance.now() returns value in milliseconds
     for(let i=0; i < iterations; i++) {
-      decoder.decodeSubResolution(decodeLevel);
+      decoder.decode();
+      // /decoder.decodeSubResolution(decodeLevel);
     }
     end = performance.now();
     $('#decodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
@@ -313,7 +314,7 @@ SPDX-License-Identifier: MIT
     $('#pixelFormat').text(''+frameInfo.bitsPerSample +' bpp ' + (frameInfo.isSigned ? 'signed' : 'unsigned'));
     $('#componentCount').text(''+frameInfo.componentCount);
 
-    $('#imageOffset').text('' + decoder.getImageOffset().x + ',' + decoder.getImageOffset().y);
+    /*$('#imageOffset').text('' + decoder.getImageOffset().x + ',' + decoder.getImageOffset().y);
     $('#tileSize').text('' + decoder.getTileSize().width + 'x' + decoder.getTileSize().height);
     $('#tileOffset').text('' + decoder.getTileOffset().x + ',' + decoder.getTileOffset().y);
     let downSamplings = '';
@@ -335,21 +336,21 @@ SPDX-License-Identifier: MIT
 
     $('#progessionOrder').text(['LRCP', 'RLCP', 'RPCL', 'PCRL', 'CPRL'][decoder.getProgressionOrder()]);
     progressionOrder = decoder.getProgressionOrder();
-
+    */
     // Display Image
     var decodedBuffer = decoder.getDecodedBuffer();
     $('#decodedSize').text(''+decodedBuffer.length.toLocaleString() + " bytes");
     $('#compressionRatio').text('' + (decodedBuffer.length /encodedBitStream.length).toFixed(2) + ":1");
    
-    let subResolutions = '';
+    /*let subResolutions = '';
     for(let i=0; i < decoder.getNumDecompositions(); i++) {
       const resolution = decoder.calculateSizeAtDecompositionLevel(i);
       subResolutions += resolution.width + 'x' + resolution.height + ' ';
     }
     $('#subResolutions').text('' + subResolutions);
-    
-    frameInfo.width = resolutionAtLevel.width;
-    frameInfo.height = resolutionAtLevel.height;    //console.log(frameInfo);
+    */
+    //frameInfo.width = resolutionAtLevel.width;
+    //frameInfo.height = resolutionAtLevel.height;    //console.log(frameInfo);
     display(frameInfo, decodedBuffer, 2);
     frameInfo = decoder.getFrameInfo();
   }
@@ -382,18 +383,18 @@ SPDX-License-Identifier: MIT
       return response.arrayBuffer();
     })
     .then((arrayBuffer) => {
-      try {
+      //try {
         encodedBitStream = new Uint8Array(arrayBuffer);
         decode();
         uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
         uncompressedImageFrame.set(decoder.getDecodedBuffer());
-      }
-      catch(ex) {
-        $('#status').text('Exception thrown while parsing ' + ex);
-      }
-    }).catch(function() {
+      //}
+      //catch(ex) {
+      //  $('#status').text('Exception thrown while parsing ' + ex);
+      //}
+    });/*.catch(function() {
       $('#status').text('error loading ' + url);
-    });
+    });*/
   }
 
   function reset() {
@@ -427,10 +428,10 @@ SPDX-License-Identifier: MIT
   }
 
   Module.onRuntimeInitialized = async _ => {
-    decoder = new Module.HTJ2KDecoder();
-    encoder = new Module.HTJ2KEncoder();
-    
-    init('../../test/fixtures/j2c/CT1.j2c');
+    decoder = new Module.J2KDecoder();
+    //encoder = new Module.J2KEncoder();
+    init('../../test/fixtures/j2k/image.j2k');
+    //init('../../test/fixtures/j2c/CT1.j2c');
     //init('../../test/fixtures/j2c/MG1.j2c');
     //init('../../test/fixtures/j2c/MR2.j2c');
     //init('../../extern/OpenJPH/subprojects/js/html/test.j2c');
