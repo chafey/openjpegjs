@@ -58,6 +58,7 @@ EMSCRIPTEN_BINDINGS(J2KDecoder) {
     .function("getPrecinct", &J2KDecoder::getPrecinct)
     .function("getNumLayers", &J2KDecoder::getNumLayers)
     .function("getIsUsingColorTransform", &J2KDecoder::getIsUsingColorTransform)
+    .function("getColorSpace", &J2KDecoder::getColorSpace)
    ;
 }
 /*

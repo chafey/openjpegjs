@@ -181,6 +181,8 @@ class J2KDecoder {
     frameInfo_.bitsPerSample = image->comps[0].prec; // TODO: verify this is in fact bitsPerSample??  since bpp always returns 0
     //*colorSpace = image->color_space;
 
+    colorSpace_ = image->color_space;
+
     const size_t bytesPerPixel = (frameInfo_.bitsPerSample + 8 - 1) / 8;
     const size_t imageSizeInBytes = frameInfo_.width * frameInfo_.height * frameInfo_.componentCount * bytesPerPixel;
     decoded_.resize(imageSizeInBytes);
@@ -191,41 +193,37 @@ class J2KDecoder {
     {
       size_t lineStart = y * frameInfo_.width * frameInfo_.componentCount * bytesPerPixel;
       if(frameInfo_.componentCount == 1) {
-        //ojph::line_buf *line = codestream.pull(comp_num, resolutionLevel);
         int* pIn = (int*)&(image->comps[0].data[y * frameInfo_.width]);
         if(frameInfo_.bitsPerSample <= 8) {
-          /*unsigned char* pOut = (unsigned char*)&decoded_[lineStart];
-          for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
-            int val = line->i32[x];
-            pOut[x] = std::max(0, std::min(val, UCHAR_MAX));
-          }*/
+            unsigned char* pOut = (unsigned char*)&decoded_[lineStart];
+            for (size_t x = 0; x < frameInfo_.width; x++) {
+              int val = pIn[x];;
+              pOut[x] = std::max(0, std::min(val, UCHAR_MAX));
+            }
         } else {
           if(frameInfo_.isSigned) {
             short* pOut = (short*)&decoded_[lineStart];
             for (size_t x = 0; x < frameInfo_.width; x++) {
-              int val = pIn[x];//line->i32[x];
+              int val = pIn[x];;
               pOut[x] = std::max(SHRT_MIN, std::min(val, SHRT_MAX));
             }
           } else {
-            /*unsigned short* pOut = (unsigned short*)&decoded_[lineStart] ;
-            for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
-                int val = line->i32[x];
-                pOut[x] = std::max(0, std::min(val, USHRT_MAX));
+            unsigned short* pOut = (unsigned short*)&decoded_[lineStart];
+            for (size_t x = 0; x < frameInfo_.width; x++) {
+              int val = pIn[x];;
+              pOut[x] = std::max(0, std::min(val, USHRT_MAX));
             }
-            */
           }
         }
-      } /*else {
-        for (int c = 0; c < frameInfo.componentCount; c++)
-        {
-          ojph::line_buf *line = codestream.pull(comp_num, resolutionLevel);
-          if(frameInfo.bitsPerSample <= 8) {
-            uint8_t* pOut = &decoded_[lineStart] + c;
-            for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
-              int val = line->i32[x];
-              pOut[x * frameInfo.componentCount] = std::max(0, std::min(val, UCHAR_MAX));
+      } else {
+          if(frameInfo_.bitsPerSample <= 8) {
+            uint8_t* pOut = &decoded_[lineStart];
+            for (size_t x = 0; x < frameInfo_.width; x++) {
+              pOut[x*3+0] = image->comps[0].data[lineStart + x];
+              pOut[x*3+1] = image->comps[1].data[lineStart + x];
+              pOut[x*3+2] = image->comps[2].data[lineStart + x];
             }
-          } else {
+          } /*else {
             // This should work but has not been tested yet
             if(frameInfo.isSigned) {
               short* pOut = (short*)&decoded_[lineStart] + c;
@@ -240,9 +238,8 @@ class J2KDecoder {
                   pOut[x * frameInfo.componentCount] = std::max(0, std::min(val, USHRT_MAX));
               }
             }
-          }
-        }
-      }*/
+          }*/
+      }
     }
 
     opj_stream_destroy(l_stream);
@@ -352,6 +349,17 @@ class J2KDecoder {
   /// </summary>
   bool getIsUsingColorTransform() const {
     return isUsingColorTransform_;
+  }
+
+  //  OPJ_CLRSPC_UNKNOWN = -1,    /**< not supported by the library */
+  //  OPJ_CLRSPC_UNSPECIFIED = 0, /**< not specified in the codestream */
+  //  OPJ_CLRSPC_SRGB = 1,        /**< sRGB */
+  //  OPJ_CLRSPC_GRAY = 2,        /**< grayscale */
+  //  OPJ_CLRSPC_SYCC = 3,        /**< YUV */
+  //  OPJ_CLRSPC_EYCC = 4,        /**< e-YCC */
+  //  OPJ_CLRSPC_CMYK = 5         /**< CMYK */
+  size_t getColorSpace() const {
+    return colorSpace_;
   }
 
   private:
@@ -494,5 +502,6 @@ class J2KDecoder {
     std::vector<Size> precincts_;
     int32_t numLayers_;
     bool isUsingColorTransform_;
+    size_t colorSpace_;
 };
 
