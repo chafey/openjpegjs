@@ -18,8 +18,7 @@ SPDX-License-Identifier: MIT
       </p>
       <div class="row">
         <select id="imageSelector">
-          <option value="../../test/fixtures/j2k/image.j2k" selected>Mystery!?!</option>
-          <option value="../../test/fixtures/j2k/CT1.j2k">CT1</option>
+          <option value="../../test/fixtures/j2k/CT1.j2k" selected>CT1</option>
           <option value="../../test/fixtures/j2k/CT2.j2k">CT2</option>
           <option value="../../test/fixtures/j2k/MG1.j2k">MG1</option>
           <option value="../../test/fixtures/j2k/MR1.j2k">MR1</option>
@@ -439,8 +438,8 @@ SPDX-License-Identifier: MIT
   Module.onRuntimeInitialized = async _ => {
     decoder = new Module.J2KDecoder();
     //encoder = new Module.J2KEncoder();
-    init('../../test/fixtures/j2k/US1.j2k');
-    //init('../../test/fixtures/j2c/CT1.j2c');
+    //init('../../test/fixtures/j2k/US1.j2k');
+    init('../../test/fixtures/j2k/CT1.j2k');
     //init('../../test/fixtures/j2c/MG1.j2c');
     //init('../../test/fixtures/j2c/MR2.j2c');
     //init('../../extern/OpenJPH/subprojects/js/html/test.j2c');
