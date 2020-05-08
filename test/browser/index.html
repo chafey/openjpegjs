@@ -68,7 +68,6 @@ SPDX-License-Identifier: MIT
       <div class="col-md-4">Max Pixel: <span id="maxPixel"></span></div>
       <div class="col-md-4">Dynamic Range: <span id="dynamicRange"></span></div>
     </div>
-    <!--
     <div class="row">
       <div class="col-md-4">Image Offset: <span id="imageOffset"></span></div>
       <div class="col-md-4">Tile Size: <span id="tileSize"></span></div>
@@ -105,6 +104,7 @@ SPDX-License-Identifier: MIT
         <input type="range" class="custom-range" id="decodeLevelRange" min="0" max="5" value="0">
       </div>
     </div>
+    <!--
 
     <hr>
     <div class="row">
@@ -299,20 +299,22 @@ SPDX-License-Identifier: MIT
 
     // warmup decode
     //decoder.readHeader();
-    //const resolutionAtLevel = decoder.calculateSizeAtDecompositionLevel(decodeLevel);
-
-    //$('#decodeLevel').text('' + decodeLevel + ' (' + resolutionAtLevel.width + 'x' + resolutionAtLevel.height + ')');
-    //$('#decodeLevelRange').attr('max', decoder.getNumDecompositions());
-    
+   
 
     // Decode
     begin = performance.now(); // performance.now() returns value in milliseconds
     for(let i=0; i < iterations; i++) {
-      decoder.decode();
-      // /decoder.decodeSubResolution(decodeLevel);
+      //decoder.decode();
+      decoder.decodeSubResolution(decodeLevel);
     }
     end = performance.now();
     $('#decodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
+
+    const resolutionAtLevel = decoder.calculateSizeAtDecompositionLevel(decodeLevel);
+
+    $('#decodeLevel').text('' + decodeLevel + ' (' + resolutionAtLevel.width + 'x' + resolutionAtLevel.height + ')');
+    $('#decodeLevelRange').attr('max', decoder.getNumDecompositions());
+
 
     frameInfo = decoder.getFrameInfo();
 
@@ -322,28 +324,28 @@ SPDX-License-Identifier: MIT
     $('#pixelFormat').text(''+frameInfo.bitsPerSample +' bpp ' + (frameInfo.isSigned ? 'signed' : 'unsigned'));
     $('#componentCount').text(''+frameInfo.componentCount);
 
-    /*$('#imageOffset').text('' + decoder.getImageOffset().x + ',' + decoder.getImageOffset().y);
+    $('#imageOffset').text('' + decoder.getImageOffset().x + ',' + decoder.getImageOffset().y);
+    $('#numDecompositions').text('' + decoder.getNumDecompositions());
+    $('#numLayers').text('' + decoder.getNumLayers());
+    $('#progessionOrder').text(['unknown', 'LRCP', 'RLCP', 'RPCL', 'PCRL', 'CPRL'][decoder.getProgressionOrder()+1]);
+    progressionOrder = decoder.getProgressionOrder();
+    $('#reversible').text('' + decoder.getIsReversible());
+    $('#blockDimensions').text('' + decoder.getBlockDimensions().width + 'x' + decoder.getBlockDimensions().height);
     $('#tileSize').text('' + decoder.getTileSize().width + 'x' + decoder.getTileSize().height);
     $('#tileOffset').text('' + decoder.getTileOffset().x + ',' + decoder.getTileOffset().y);
+
+    /*
     let downSamplings = '';
     for(let i=0; i < frameInfo.componentCount; i++) {
       downSamplings += decoder.getDownSample(i).x + ',' + decoder.getDownSample(i).y + ' ';
     }
     $('#downSampling').text('' + downSamplings);
 
-    $('#numDecompositions').text('' + decoder.getNumDecompositions());
-    $('#blockDimensions').text('' + decoder.getBlockDimensions().width + 'x' + decoder.getBlockDimensions().height);
-    $('#reversible').text('' + decoder.getIsReversible());
     let precints = '';
     for(let i=0; i < decoder.getNumDecompositions(); i++) {
       precints += decoder.getPrecinct(i).width + 'x' + decoder.getPrecinct(i).height + ' ';
     }
     $('#precincts').text('' + precints);
-    $('#numLayers').text('' + decoder.getNumLayers());
-    $('#colorTransform').text('' + decoder.getIsUsingColorTransform());
-
-    $('#progessionOrder').text(['LRCP', 'RLCP', 'RPCL', 'PCRL', 'CPRL'][decoder.getProgressionOrder()]);
-    progressionOrder = decoder.getProgressionOrder();
     */
     $('#colorTransform').text('' + decoder.getColorSpace());
 
@@ -352,15 +354,15 @@ SPDX-License-Identifier: MIT
     $('#decodedSize').text(''+decodedBuffer.length.toLocaleString() + " bytes");
     $('#compressionRatio').text('' + (decodedBuffer.length /encodedBitStream.length).toFixed(2) + ":1");
    
-    /*let subResolutions = '';
+    let subResolutions = '';
     for(let i=0; i < decoder.getNumDecompositions(); i++) {
       const resolution = decoder.calculateSizeAtDecompositionLevel(i);
       subResolutions += resolution.width + 'x' + resolution.height + ' ';
     }
     $('#subResolutions').text('' + subResolutions);
-    */
-    //frameInfo.width = resolutionAtLevel.width;
-    //frameInfo.height = resolutionAtLevel.height;    //console.log(frameInfo);
+
+    frameInfo.width = resolutionAtLevel.width;
+    frameInfo.height = resolutionAtLevel.height;    //console.log(frameInfo);
     display(frameInfo, decodedBuffer, 2);
     frameInfo = decoder.getFrameInfo();
   }
@@ -441,7 +443,8 @@ SPDX-License-Identifier: MIT
     decoder = new Module.J2KDecoder();
     //encoder = new Module.J2KEncoder();
     //init('../../test/fixtures/j2k/US1.j2k');
-    init('../../test/fixtures/j2k/CT1.j2k');
+    init('../../test/fixtures/j2k/XA1.j2k');
+    //init('../../test/fixtures/j2k/CT1.j2k');
     //init('../../test/fixtures/j2c/MG1.j2c');
     //init('../../test/fixtures/j2c/MR2.j2c');
     //init('../../extern/OpenJPH/subprojects/js/html/test.j2c');
