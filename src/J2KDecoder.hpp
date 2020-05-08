@@ -168,13 +168,6 @@ class J2KDecoder {
   }
 
   /// <summary>
-  /// returns the down sampling used for component.
-  /// </summary>
-  Point getDownSample(size_t component) const {
-    return downSamples_[component];
-  }
-
-  /// <summary>
   /// returns the image offset
   /// </summary>
   Point getImageOffset() const {
@@ -202,13 +195,6 @@ class J2KDecoder {
     return blockDimensions_;
   }
 
-  /// <summary>
-  /// returns the precinct for the specified resolution decomposition level
-  /// </summary>
-  Size getPrecinct(size_t level) const {
-    return precincts_[level];
-  }
-  
   /// <summary>
   /// returns the number of layers 
   /// </summary>
@@ -384,7 +370,6 @@ class J2KDecoder {
     std::vector<uint8_t> encoded_;
     std::vector<uint8_t> decoded_;
     FrameInfo frameInfo_;
-    std::vector<Point> downSamples_;
     size_t numDecompositions_;
     bool isReversible_;
     int progressionOrder_;
@@ -392,7 +377,6 @@ class J2KDecoder {
     Size tileSize_;
     Point tileOffset_;
     Size blockDimensions_;
-    std::vector<Size> precincts_;
     int32_t numLayers_;
     bool isUsingColorTransform_;
     size_t colorSpace_;
