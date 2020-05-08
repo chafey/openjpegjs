@@ -224,7 +224,8 @@ class J2KEncoder {
     opj_codec_t* l_codec = 00;
     opj_image_t *image = NULL;
     
-    OPJ_COLOR_SPACE color_space = OPJ_CLRSPC_GRAY; // todo - fix for color
+    OPJ_COLOR_SPACE color_space = OPJ_CLRSPC_GRAY; // todo - fix for color OPJ_CLRSPC_SRGB;//
+    
     std::vector<opj_image_cmptparm_t> cmptparm;
     cmptparm.resize(frameInfo_.componentCount);
     /* initialize image components */
@@ -246,7 +247,15 @@ class J2KEncoder {
     image->y1 = (OPJ_UINT32)frameInfo_.height; // TODO: revisit logic in terms of subsampling and offsets?
 
     if(frameInfo_.bitsPerSample <= 8) {
-
+      if(frameInfo_.componentCount == 1) {
+        std::copy((uint8_t*)decoded_.data(), (uint8_t*)(decoded_.data() + decoded_.size()), image->comps[0].data);
+      } else {
+        for(size_t compno = 0; compno < frameInfo_.componentCount; compno++) {
+          for(size_t i=0; i < frameInfo_.width * frameInfo_.height; i++) {
+            image->comps[compno].data[i] = decoded_.data()[(i * frameInfo_.componentCount) + compno];
+          }
+        }
+      }
     } else if(frameInfo_.bitsPerSample <= 16) {
       if(frameInfo_.isSigned) {
         std::copy((short*)decoded_.data(), (short*)(decoded_.data() + decoded_.size()), image->comps[0].data);
@@ -313,81 +322,6 @@ class J2KEncoder {
     }
 
     encoded_.resize(buffer_info.cur - buffer_info.buf);
-
-/*
-    encoded_.open();
-    // Setup image size parameters
-    ojph::codestream codestream;
-    ojph::param_siz siz = codestream.access_siz();
-    siz.set_image_extent(ojph::point(frameInfo_.width, frameInfo_.height));
-    int num_comps = frameInfo_.componentCount;
-    siz.set_num_components(num_comps);
-    for (int c = 0; c < num_comps; ++c)
-        siz.set_component(c, ojph::point(downSamples_[c].x, downSamples_[c].y), frameInfo_.bitsPerSample, frameInfo_.isSigned);
-    siz.set_image_offset(ojph::point(imageOffset_.x, imageOffset_.y));
-    siz.set_tile_size(ojph::size(tileSize_.width,tileSize_.height));
-    siz.set_tile_offset(ojph::point(tileOffset_.x, tileOffset_.y));
-
-    // Setup encoding parameters
-    ojph::param_cod cod = codestream.access_cod();
-    cod.set_num_decomposition(decompositions_);
-    cod.set_block_dims(blockDimensions_.width,blockDimensions_.height);
-    std::vector<ojph::size> precincts;
-    precincts.resize(precincts_.size());
-    for(size_t i=0; i < precincts_.size(); i++) {
-      precincts[i].w = precincts_[i].width;
-      precincts[i].h = precincts_[i].height;
-    }
-    cod.set_precinct_size(precincts_.size(), precincts.data());
-
-    const char* progOrders[] = {"LRCP", "RLCP", "RPCL", "PCRL", "CPRL"};
-    cod.set_progression_order(progOrders[progressionOrder_]);
-    cod.set_color_transform(isUsingColorTransform_);
-    cod.set_reversible(lossless_);
-    if(!lossless_) {
-      codestream.access_qcd().set_irrev_quant(quantizationStep_);
-    }
-    codestream.set_planar(isUsingColorTransform_ == false);
-    codestream.write_headers(&encoded_);
-  
-    // Encode the image
-    const size_t bytesPerPixel = frameInfo_.bitsPerSample / 8;
-    int next_comp;
-    ojph::line_buf* cur_line = codestream.exchange(NULL, next_comp);
-    siz = codestream.access_siz();
-    int height = siz.get_image_extent().y - siz.get_image_offset().y;
-    for (size_t y = 0; y < height; y++)
-    {
-      for (size_t c = 0; c < siz.get_num_components(); c++)
-      {
-        int* dp = cur_line->i32;
-        if(frameInfo_.bitsPerSample <= 8) {
-          uint8_t* pIn = (uint8_t*)(decoded_.data() + (y * frameInfo_.width * bytesPerPixel * siz.get_num_components()) + c);
-          for(size_t x=0; x < frameInfo_.width; x++) {
-            *dp++ = *pIn;
-            pIn+=siz.get_num_components();
-          }
-        } else {
-          if(frameInfo_.isSigned) {
-            int16_t* pIn = (int16_t*)(decoded_.data() + (y * frameInfo_.width * bytesPerPixel));
-            for(size_t x=0; x < frameInfo_.width; x++) {
-              *dp++ = *pIn++;
-            }
-          } else {
-            uint16_t* pIn = (uint16_t*)(decoded_.data() + (y * frameInfo_.width * bytesPerPixel));
-            for(size_t x=0; x < frameInfo_.width; x++) {
-              *dp++ = *pIn++;
-            }
-          }
-        }
-        cur_line = codestream.exchange(cur_line, next_comp);
-      }
-    }
-    
-    // cleanup
-    codestream.flush();
-    codestream.close();
-    */
   }
 
   private:
