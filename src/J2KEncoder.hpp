@@ -33,7 +33,7 @@ class J2KEncoder {
   J2KEncoder() :
     decompositions_(5),
     lossless_(true),
-    quantizationStep_(-1.0),
+    compressionRatio_(1.0f),
     progressionOrder_(2), // RPCL
     blockDimensions_(64,64)
   {
@@ -55,7 +55,7 @@ class J2KEncoder {
   /// </returns>
   emscripten::val getDecodedBuffer(const FrameInfo& frameInfo) {
     frameInfo_ = frameInfo;
-    const size_t bytesPerPixel = frameInfo_.bitsPerSample / 8;
+    const size_t bytesPerPixel = (frameInfo_.bitsPerSample + 8 - 1) / 8;
     const size_t decodedSize = frameInfo_.width * frameInfo_.height * frameInfo_.componentCount * bytesPerPixel;
     for (int c = 0; c < frameInfo_.componentCount; ++c) {
         downSamples_[c].x = 1;
@@ -113,9 +113,9 @@ class J2KEncoder {
   /// quantizationStep controls the lossy quantization applied.  quantizationStep
   /// is ignored if lossless is true
   /// </summary>
-  void setQuality(bool lossless, float quantizationStep) {
+  void setQuality(bool lossless, float compressionRatio) {
     lossless_ = lossless;
-    quantizationStep_ = quantizationStep;
+    compressionRatio_ = compressionRatio;
   }
 
   /// <summary>
@@ -251,13 +251,22 @@ class J2KEncoder {
       if(frameInfo_.isSigned) {
         std::copy((short*)decoded_.data(), (short*)(decoded_.data() + decoded_.size()), image->comps[0].data);
       } else {
-        //std::copy(decoded_.data(), )
+        std::copy((unsigned short*)decoded_.data(), (unsigned short*)(decoded_.data() + decoded_.size()), image->comps[0].data);
       }
     }
 
     /* set encoding parameters to default values */
     opj_set_default_encoder_parameters(&parameters);
     parameters.tcp_mct = (char)0; // disable for grayscale: TODO - set this properly for color
+    parameters.prog_order = (OPJ_PROG_ORDER)progressionOrder_;
+    parameters.numresolution = decompositions_ + 1;
+
+    if(compressionRatio_ > 1.0f) {
+      parameters.irreversible = true;
+      parameters.tcp_numlayers = 1;
+      parameters.tcp_rates[0] = compressionRatio_;
+      parameters.cp_disto_alloc = 1;
+    }
 
     // TODO: add support for JP2 encoding via config parameter
     l_codec = opj_create_compress(OPJ_CODEC_J2K);
@@ -388,7 +397,7 @@ class J2KEncoder {
     FrameInfo frameInfo_;
     size_t decompositions_;
     bool lossless_;
-    float quantizationStep_;
+    float compressionRatio_;
     size_t progressionOrder_;
 
     std::vector<Point> downSamples_;

@@ -98,7 +98,6 @@ SPDX-License-Identifier: MIT
         <input type="range" class="custom-range" id="decodeLevelRange" min="0" max="5" value="0">
       </div>
     </div>
-    <!--
 
     <hr>
     <div class="row">
@@ -108,8 +107,8 @@ SPDX-License-Identifier: MIT
       </div>
         <div class="row">
       <div class="col-md-12">
-        <span>Lossy Quantization Factor: </span><span id="quantization">0.0000</span>
-        <input type="range" class="custom-range" id="quantizationRange" min="0" max="1000" value="0">
+        <span>Lossy Compression Ratio: </span><span id="quantization">1.0</span>
+        <input type="range" class="custom-range" id="quantizationRange" min="1" max="100" value="1">
       </div>
     </div>
     <div class="row">
@@ -138,8 +137,7 @@ SPDX-License-Identifier: MIT
         </select>        
       </div>
     </div>
--->
-<div class="row">
+    <div class="row">
       <div class="col-md-6">
         <canvas id='myCanvas' width="512" height="512"/>
     </div>
@@ -435,10 +433,10 @@ SPDX-License-Identifier: MIT
 
   Module.onRuntimeInitialized = async _ => {
     decoder = new Module.J2KDecoder();
-    //encoder = new Module.J2KEncoder();
+    encoder = new Module.J2KEncoder();
     //init('../../test/fixtures/j2k/US1.j2k');
-    init('../../test/fixtures/j2k/XA1.j2k');
-    //init('../../test/fixtures/j2k/CT1.j2k');
+    //init('../../test/fixtures/j2k/XA1.j2k');
+    init('../../test/fixtures/j2k/CT1.j2k');
     //init('../../test/fixtures/j2c/MG1.j2c');
     //init('../../test/fixtures/j2c/MR2.j2c');
     //init('../../extern/OpenJPH/subprojects/js/html/test.j2c');
@@ -498,12 +496,12 @@ SPDX-License-Identifier: MIT
     });
 
     $('#quantizationRange').on('input', function(e) {
-      quantization = parseFloat($(this).val()) / 10000;
+      compressionRatio = parseFloat($(this).val());
       if(decoder.getFrameInfo().bitsPerSample > 8) {
-        quantization /= 10;
+        //quantization /= 10;
       }
-      $('#quantization').text('' + quantization.toFixed(5));
-      encode(quantization);
+      $('#quantization').text('' + compressionRatio.toFixed(2));
+      encode(compressionRatio);
        // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;

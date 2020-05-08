@@ -286,9 +286,6 @@ class J2KDecoder {
       frameInfo_.isSigned = image->comps[0].sgnd;
       frameInfo_.bitsPerSample = image->comps[0].prec; // TODO: verify this is in fact bitsPerSample??  since bpp always returns 0
 
-      printf("dx=%d", image->comps[0].dx);
-      printf("dy=%d", image->comps[0].dy);
-
       colorSpace_ = image->color_space;
       imageOffset_.x = image->x0;
       imageOffset_.y = image->y0;
