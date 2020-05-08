@@ -31,7 +31,8 @@ class J2KDecoder {
   /// <summary>
   /// Constructor for decoding a HTJ2K image from JavaScript.
   /// </summary>
-  J2KDecoder()
+  J2KDecoder() :
+  decodeLayer_(1)
   {
   }
 
@@ -129,7 +130,8 @@ class J2KDecoder {
   /// buffer before calling this method, see getEncodedBuffer() and
   ///  getEncodedBytes() above.
   /// </summary>
-  void decodeSubResolution(size_t decompositionLevel) {
+  void decodeSubResolution(size_t decompositionLevel, size_t decodeLayer) {
+    decodeLayer_ = decodeLayer;
     decode_i(decompositionLevel);
   }
 
@@ -202,13 +204,6 @@ class J2KDecoder {
     return numLayers_;
   }
 
-  /// <summary>
-  /// returns whether or not a color transform is used 
-  /// </summary>
-  bool getIsUsingColorTransform() const {
-    return isUsingColorTransform_;
-  }
-
   //  OPJ_CLRSPC_UNKNOWN = -1,    /**< not supported by the library */
   //  OPJ_CLRSPC_UNSPECIFIED = 0, /**< not specified in the codestream */
   //  OPJ_CLRSPC_SRGB = 1,        /**< sRGB */
@@ -223,7 +218,7 @@ class J2KDecoder {
   private:
 
     void decode_i(size_t decompositionLevel) {
-       opj_dparameters_t parameters;
+      opj_dparameters_t parameters;
       opj_codec_t* l_codec = NULL;
       opj_image_t* image = NULL;
       opj_stream_t *l_stream = NULL;
@@ -246,6 +241,7 @@ class J2KDecoder {
 
       opj_set_default_decoder_parameters(&parameters);
       parameters.cp_reduce = decompositionLevel;
+      parameters.cp_layer = decodeLayer_;
       //opj_set_decoded_resolution_factor(l_codec, 1);
       // set stream
       opj_buffer_info_t buffer_info;
@@ -284,7 +280,7 @@ class J2KDecoder {
       frameInfo_.height = image->y1;
       frameInfo_.componentCount = image->numcomps;
       frameInfo_.isSigned = image->comps[0].sgnd;
-      frameInfo_.bitsPerSample = image->comps[0].prec; // TODO: verify this is in fact bitsPerSample??  since bpp always returns 0
+      frameInfo_.bitsPerSample = image->comps[0].prec;
 
       colorSpace_ = image->color_space;
       imageOffset_.x = image->x0;
@@ -314,7 +310,8 @@ class J2KDecoder {
       int comp_num;
       for (int y = 0; y < sizeAtDecompositionLevel.height; y++)
       {
-        size_t lineStart = y * sizeAtDecompositionLevel.width * frameInfo_.componentCount * bytesPerPixel;
+        size_t lineStartPixel = y * sizeAtDecompositionLevel.width;
+        size_t lineStart = lineStartPixel * frameInfo_.componentCount * bytesPerPixel;
         if(frameInfo_.componentCount == 1) {
           int* pIn = (int*)&(image->comps[0].data[y * sizeAtDecompositionLevel.width]);
           if(frameInfo_.bitsPerSample <= 8) {
@@ -342,9 +339,9 @@ class J2KDecoder {
             if(frameInfo_.bitsPerSample <= 8) {
               uint8_t* pOut = &decoded_[lineStart];
               for (size_t x = 0; x < sizeAtDecompositionLevel.width; x++) {
-                pOut[x*3+0] = image->comps[0].data[lineStart + x];
-                pOut[x*3+1] = image->comps[1].data[lineStart + x];
-                pOut[x*3+2] = image->comps[2].data[lineStart + x];
+                pOut[x*3+0] = image->comps[0].data[lineStartPixel + x];
+                pOut[x*3+1] = image->comps[1].data[lineStartPixel + x];
+                pOut[x*3+2] = image->comps[2].data[lineStartPixel + x];
               }
             } /*else {
               // This should work but has not been tested yet
@@ -381,7 +378,8 @@ class J2KDecoder {
     Point tileOffset_;
     Size blockDimensions_;
     int32_t numLayers_;
-    bool isUsingColorTransform_;
     size_t colorSpace_;
+
+    size_t decodeLayer_;
 };
 

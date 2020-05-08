@@ -98,7 +98,12 @@ SPDX-License-Identifier: MIT
         <input type="range" class="custom-range" id="decodeLevelRange" min="0" max="5" value="0">
       </div>
     </div>
-
+    <div class="row">
+      <div class="col-md-12">
+        <span>Layer: </span><span id="decodeLayer">0</span>
+        <input type="range" class="custom-range" id="decodeLayerRange" min="1" max="1" value="1">
+      </div>
+    </div>
     <hr>
     <div class="row">
       <div class="col-md-12">
@@ -107,8 +112,8 @@ SPDX-License-Identifier: MIT
       </div>
         <div class="row">
       <div class="col-md-12">
-        <span>Lossy Compression Ratio: </span><span id="quantization">1.0</span>
-        <input type="range" class="custom-range" id="quantizationRange" min="1" max="100" value="1">
+        <span>Lossy Compression Ratio: </span><span id="targetCompressionRatio">1.0</span>
+        <input type="range" class="custom-range" id="targetCompressionRatioRange" min="1" max="100" value="1">
       </div>
     </div>
     <div class="row">
@@ -150,10 +155,11 @@ SPDX-License-Identifier: MIT
   let encodedBitStream = undefined;
   let uncompressedImageFrame = undefined;
   let frameInfo = undefined;
-  let quantization = 0;
+  let compressionRatio = 0;
   let minMax = undefined;
   let progressionOrder = undefined;
   let decodeLevel = 0;
+  let decodeLayer = 0;
   let numDecompositionsToEncode = 5;
 
   function getMinMax(frameInfo, pixelData) {
@@ -297,7 +303,7 @@ SPDX-License-Identifier: MIT
     begin = performance.now(); // performance.now() returns value in milliseconds
     for(let i=0; i < iterations; i++) {
       //decoder.decode();
-      decoder.decodeSubResolution(decodeLevel);
+      decoder.decodeSubResolution(decodeLevel, decodeLayer);
     }
     end = performance.now();
     $('#decodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
@@ -306,7 +312,7 @@ SPDX-License-Identifier: MIT
 
     $('#decodeLevel').text('' + decodeLevel + ' (' + resolutionAtLevel.width + 'x' + resolutionAtLevel.height + ')');
     $('#decodeLevelRange').attr('max', decoder.getNumDecompositions());
-
+    $('#decodeLayerRange').attr('max', decoder.getNumLayers());
 
     frameInfo = decoder.getFrameInfo();
 
@@ -359,17 +365,16 @@ SPDX-License-Identifier: MIT
     frameInfo = decoder.getFrameInfo();
   }
 
-  function encode(quantization, iterations = 1) {
+  function encode(iterations = 1) {
     // Setup buffer
     const decodedBytes = encoder.getDecodedBuffer(frameInfo);
     decodedBytes.set(uncompressedImageFrame);
-    if(quantization < 0.00001) {
-      encoder.setQuality(true, quantization);
+    if(compressionRatio > 1.0) {
+      encoder.setQuality(false, compressionRatio);
     } else {
-      encoder.setQuality(false, quantization);
+      encoder.setQuality(true, compressionRatio);
     }
     encoder.setDecompositions(numDecompositionsToEncode);
-    encoder.setIsUsingColorTransform(decoder.getFrameInfo().componentCount === 3);
     encoder.setProgressionOrder(progressionOrder);
     
     // Do the encode
@@ -446,6 +451,12 @@ SPDX-License-Identifier: MIT
       load(e.target.options[e.target.selectedIndex].value);
     });
 
+    $('#decodeLayerRange').on('input', function(e) {
+      decodeLayer = parseInt($(this).val());
+      $('#decodeLayer').text('' + decodeLayer);
+      decode();
+    });
+
     $('#decodeLevelRange').on('input', function(e) {
       decodeLevel = parseInt($(this).val());
       const resolutionAtLevel = decoder.calculateSizeAtDecompositionLevel(decodeLevel);
@@ -455,7 +466,7 @@ SPDX-License-Identifier: MIT
 
     $('#progressionOrderSelector').change(function(e) {
       progressionOrder = parseInt(e.target.options[e.target.selectedIndex].value);
-      encode(quantization);
+      encode();
        // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;
@@ -464,7 +475,7 @@ SPDX-License-Identifier: MIT
 
     $('#decompositionsSelector').change(function(e) {
       numDecompositionsToEncode = parseInt(e.target.options[e.target.selectedIndex].value);
-      encode(quantization);
+      encode();
        // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;
@@ -476,7 +487,7 @@ SPDX-License-Identifier: MIT
       setTimeout(() => {
         const iterations = 50;
         decode(iterations)
-        encode(quantization, iterations)
+        encode(iterations)
         $('#status').text('OK - ' + iterations + ' iterations encode/decode');
       }, 1);
     });
@@ -495,13 +506,10 @@ SPDX-License-Identifier: MIT
       encodedBitStream = fullEncodedBitStream;
     });
 
-    $('#quantizationRange').on('input', function(e) {
+    $('#targetCompressionRatioRange').on('input', function(e) {
       compressionRatio = parseFloat($(this).val());
-      if(decoder.getFrameInfo().bitsPerSample > 8) {
-        //quantization /= 10;
-      }
-      $('#quantization').text('' + compressionRatio.toFixed(2));
-      encode(compressionRatio);
+      $('#targetCompressionRatio').text('' + compressionRatio.toFixed(2));
+      encode();
        // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;

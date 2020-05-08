@@ -608,8 +608,8 @@ var wasmMemory;
 // In the wasm backend, we polyfill the WebAssembly object,
 // so this creates a (non-native-wasm) table for us.
 var wasmTable = new WebAssembly.Table({
-  'initial': 7168,
-  'maximum': 7168,
+  'initial': 6912,
+  'maximum': 6912,
   'element': 'anyfunc'
 });
 
@@ -1208,11 +1208,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 47456,
+    STACK_BASE = 47392,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 5290336,
-    DYNAMIC_BASE = 5290336,
-    DYNAMICTOP_PTR = 47264;
+    STACK_MAX = 5290272,
+    DYNAMIC_BASE = 5290272,
+    DYNAMICTOP_PTR = 47200;
 
 
 
@@ -1632,7 +1632,7 @@ var ASM_CONSTS = [];
 
 
 
-// STATICTOP = STATIC_BASE + 46432;
+// STATICTOP = STATIC_BASE + 46368;
 /* global initializers */  __ATINIT__.push({ func: function() { globalCtors() } });
 
 
@@ -1643,7 +1643,7 @@ var ASM_CONSTS = [];
 
 
 /* no memory initializer */
-var tempDoublePtr = 47440
+var tempDoublePtr = 47376
 
 function copyTempFloat(ptr) { // functions, because inlining this code increases code size too much
   HEAP8[tempDoublePtr] = HEAP8[ptr];

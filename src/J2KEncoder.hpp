@@ -23,12 +23,12 @@
 #include "Size.hpp"
 
 /// <summary>
-/// JavaScript API for encoding images to HTJ2K bitstreams with OpenJPH
+/// JavaScript API for encoding images to J2K bitstreams with OpenJPH
 /// </summary>
 class J2KEncoder {
   public: 
   /// <summary>
-  /// Constructor for encoding a HTJ2K image from JavaScript.  
+  /// Constructor for encoding a HJ2K image from JavaScript.  
   /// </summary>
   J2KEncoder() :
     decompositions_(5),
@@ -109,9 +109,9 @@ class J2KEncoder {
   }
 
   /// <summary>
-  /// Sets the quality level for the image.  If lossless is false then
-  /// quantizationStep controls the lossy quantization applied.  quantizationStep
-  /// is ignored if lossless is true
+  /// Sets which wavelet to use (9/7 lossy or 5/3 losslsess) and
+  /// what compressionRatio to achieve - lossy quantization
+  /// will be applied if necessary
   /// </summary>
   void setQuality(bool lossless, float compressionRatio) {
     lossless_ = lossless;
@@ -180,13 +180,6 @@ class J2KEncoder {
     precincts_[level] = precinct;
   }
 
-  /// <summary>
-  /// Sets whether or not the color transform is used
-  /// </summary>
-  void setIsUsingColorTransform(bool isUsingColorTransform) {
-    isUsingColorTransform_ = isUsingColorTransform;
-  }
-
   /**
   sample error debug callback expecting no client object
   */
@@ -213,7 +206,7 @@ class J2KEncoder {
   }
 
   /// <summary>
-  /// Executes an HTJ2K encode using the data in the source buffer.  The
+  /// Executes an J2K encode using the data in the source buffer.  The
   /// JavaScript code must copy the source image frame into the source
   /// buffer before calling this method.  See documentation on getSourceBytes()
   /// above
@@ -224,7 +217,7 @@ class J2KEncoder {
     opj_codec_t* l_codec = 00;
     opj_image_t *image = NULL;
     
-    OPJ_COLOR_SPACE color_space = OPJ_CLRSPC_GRAY; // todo - fix for color OPJ_CLRSPC_SRGB;//
+    OPJ_COLOR_SPACE color_space = frameInfo_.componentCount > 1 ? OPJ_CLRSPC_SRGB : OPJ_CLRSPC_GRAY;
     
     std::vector<opj_image_cmptparm_t> cmptparm;
     cmptparm.resize(frameInfo_.componentCount);
@@ -266,14 +259,15 @@ class J2KEncoder {
 
     /* set encoding parameters to default values */
     opj_set_default_encoder_parameters(&parameters);
-    parameters.tcp_mct = (char)0; // disable for grayscale: TODO - set this properly for color
+    parameters.tcp_mct = (char)frameInfo_.componentCount > 1 ? 1 : 0; // disable for grayscale: TODO - set this properly for color
     parameters.prog_order = (OPJ_PROG_ORDER)progressionOrder_;
     parameters.numresolution = decompositions_ + 1;
+    parameters.irreversible = !lossless_;
 
     if(compressionRatio_ > 1.0f) {
-      parameters.irreversible = true;
       parameters.tcp_numlayers = 1;
       parameters.tcp_rates[0] = compressionRatio_;
+      //parameters.tcp_rates[1] = 1.0f;
       parameters.cp_disto_alloc = 1;
     }
 
@@ -340,5 +334,4 @@ class J2KEncoder {
     Point tileOffset_;
     Size blockDimensions_;
     std::vector<Size> precincts_;
-    bool isUsingColorTransform_;
 };

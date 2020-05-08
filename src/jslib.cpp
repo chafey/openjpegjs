@@ -55,7 +55,6 @@ EMSCRIPTEN_BINDINGS(J2KDecoder) {
     .function("getTileOffset", &J2KDecoder::getTileOffset)
     .function("getBlockDimensions", &J2KDecoder::getBlockDimensions)
     .function("getNumLayers", &J2KDecoder::getNumLayers)
-    .function("getIsUsingColorTransform", &J2KDecoder::getIsUsingColorTransform)
     .function("getColorSpace", &J2KDecoder::getColorSpace)
    ;
 }
@@ -77,6 +76,5 @@ EMSCRIPTEN_BINDINGS(J2KEncoder) {
     .function("setBlockDimensions", &J2KEncoder::setBlockDimensions)
     .function("setNumPrecincts", &J2KEncoder::setNumPrecincts)
     .function("setPrecinct", &J2KEncoder::setPrecinct)
-    .function("setIsUsingColorTransform", &J2KEncoder::setIsUsingColorTransform)
    ;
 }
