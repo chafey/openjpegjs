@@ -229,12 +229,15 @@ class J2KDecoder {
       opj_stream_t *l_stream = NULL;
 
       // detect stream type
+      // NOTE: DICOM only supports OPJ_CODEC_J2K, but not everyone follows this
+      // and some DICOM images will have JP2 encoded bitstreams
+      // http://dicom.nema.org/medical/dicom/2017e/output/chtml/part05/sect_A.4.4.html
       if( ((OPJ_INT32*)encoded_.data())[0] == J2K_MAGIC_NUMBER ){
           l_codec = opj_create_decompress(OPJ_CODEC_J2K);
-          // printf("OPJ_CODEC_J2K\n");
+          printf("OPJ_CODEC_J2K\n");
       }else{
           l_codec = opj_create_decompress(OPJ_CODEC_JP2);
-          // printf("OPJ_CODEC_JP2\n");
+          printf("OPJ_CODEC_JP2\n");
       }
 
       opj_set_info_handler(l_codec, info_callback,00);
@@ -282,6 +285,9 @@ class J2KDecoder {
       frameInfo_.componentCount = image->numcomps;
       frameInfo_.isSigned = image->comps[0].sgnd;
       frameInfo_.bitsPerSample = image->comps[0].prec; // TODO: verify this is in fact bitsPerSample??  since bpp always returns 0
+
+      printf("dx=%d", image->comps[0].dx);
+      printf("dy=%d", image->comps[0].dy);
 
       colorSpace_ = image->color_space;
       imageOffset_.x = image->x0;

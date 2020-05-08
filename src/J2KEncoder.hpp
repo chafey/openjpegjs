@@ -6,29 +6,31 @@
 #include <exception>
 #include <memory>
 
-#include <ojph_arch.h>
-#include <ojph_file.h>
-#include <ojph_mem.h>
-#include <ojph_params.h>
-#include <ojph_codestream.h>
 
+#include "openjpeg.h"
+#include <string.h>
+#include <stdlib.h>
+#define EMSCRIPTEN_API __attribute__((used))
+#define J2K_MAGIC_NUMBER 0x51FF4FFF
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
 #endif
 
-#include "EncodedBuffer.hpp"
+#include "BufferStream.hpp"
 #include "FrameInfo.hpp"
+#include "Point.hpp"
+#include "Size.hpp"
 
 /// <summary>
 /// JavaScript API for encoding images to HTJ2K bitstreams with OpenJPH
 /// </summary>
-class HTJ2KEncoder {
+class J2KEncoder {
   public: 
   /// <summary>
   /// Constructor for encoding a HTJ2K image from JavaScript.  
   /// </summary>
-  HTJ2KEncoder() :
+  J2KEncoder() :
     decompositions_(5),
     lossless_(true),
     quantizationStep_(-1.0),
@@ -73,7 +75,7 @@ class HTJ2KEncoder {
   /// encoded pixel data.
   /// </returns>
   emscripten::val getEncodedBuffer() {
-    return emscripten::val(emscripten::typed_memory_view(encoded_.tell(), encoded_.get_data()));
+    return emscripten::val(emscripten::typed_memory_view(encoded_.size(), encoded_.data()));
   }
 #else
   /// <summary>
@@ -185,6 +187,31 @@ class HTJ2KEncoder {
     isUsingColorTransform_ = isUsingColorTransform;
   }
 
+  /**
+  sample error debug callback expecting no client object
+  */
+  static void error_callback(const char *msg, void *client_data)
+  {
+      (void)client_data;
+      fprintf(stdout, "[ERROR] %s", msg);
+  }
+  /**
+  sample warning debug callback expecting no client object
+  */
+  static void warning_callback(const char *msg, void *client_data)
+  {
+      (void)client_data;
+      fprintf(stdout, "[WARNING] %s", msg);
+  }
+  /**
+  sample debug callback expecting no client object
+  */
+  static void info_callback(const char *msg, void *client_data)
+  {
+      (void)client_data;
+      fprintf(stdout, "[INFO] %s", msg);
+  }
+
   /// <summary>
   /// Executes an HTJ2K encode using the data in the source buffer.  The
   /// JavaScript code must copy the source image frame into the source
@@ -192,8 +219,94 @@ class HTJ2KEncoder {
   /// above
   /// </summary>
   void encode() {
-    encoded_.open();
+    opj_cparameters_t parameters;   /* compression parameters */
+    opj_stream_t *l_stream = 00;
+    opj_codec_t* l_codec = 00;
+    opj_image_t *image = NULL;
+    
+    OPJ_COLOR_SPACE color_space = OPJ_CLRSPC_GRAY; // todo - fix for color
+    std::vector<opj_image_cmptparm_t> cmptparm;
+    cmptparm.resize(frameInfo_.componentCount);
+    /* initialize image components */
+    for (int i = 0; i < frameInfo_.componentCount; i++) {
+        cmptparm[i].prec = (OPJ_UINT32)frameInfo_.bitsPerSample;
+        cmptparm[i].bpp = (OPJ_UINT32)frameInfo_.bitsPerSample;
+        cmptparm[i].sgnd = (OPJ_UINT32)frameInfo_.isSigned;
+        cmptparm[i].dx = 1;//(OPJ_UINT32)(subsampling_dx * raw_cp->rawComps[i].dx);
+        cmptparm[i].dy = 1;//(OPJ_UINT32)(subsampling_dy * raw_cp->rawComps[i].dy);
+        cmptparm[i].w = (OPJ_UINT32)frameInfo_.width;
+        cmptparm[i].h = (OPJ_UINT32)frameInfo_.height;
+    }
+    image = opj_image_create((OPJ_UINT32)frameInfo_.componentCount, cmptparm.data(), color_space);
 
+    /* set image offset and reference grid */
+    image->x0 = (OPJ_UINT32)imageOffset_.x;
+    image->y0 = (OPJ_UINT32)imageOffset_.y;
+    image->x1 = (OPJ_UINT32)frameInfo_.width; // TODO: revisit logic in terms of subsampling and offsets?
+    image->y1 = (OPJ_UINT32)frameInfo_.height; // TODO: revisit logic in terms of subsampling and offsets?
+
+    if(frameInfo_.bitsPerSample <= 8) {
+
+    } else if(frameInfo_.bitsPerSample <= 16) {
+      if(frameInfo_.isSigned) {
+        std::copy((short*)decoded_.data(), (short*)(decoded_.data() + decoded_.size()), image->comps[0].data);
+      } else {
+        //std::copy(decoded_.data(), )
+      }
+    }
+
+    /* set encoding parameters to default values */
+    opj_set_default_encoder_parameters(&parameters);
+    parameters.tcp_mct = (char)0; // disable for grayscale: TODO - set this properly for color
+
+    // TODO: add support for JP2 encoding via config parameter
+    l_codec = opj_create_compress(OPJ_CODEC_J2K);
+
+    /* catch events using our callbacks and give a local context */
+    opj_set_info_handler(l_codec, info_callback, 00);
+    opj_set_warning_handler(l_codec, warning_callback, 00);
+    opj_set_error_handler(l_codec, error_callback, 00);
+
+    // TODO: Add support for using tiles?
+
+    if (! opj_setup_encoder(l_codec, &parameters, image)) {
+      fprintf(stderr, "failed to encode image: opj_setup_encoder\n");
+      opj_destroy_codec(l_codec);
+      opj_image_destroy(image);
+      return; // TODO: implement error handling
+    }
+
+    // HACK: For now - make encoded buffer the same size as decoded so we can
+    // avoid messing with BufferStream malloc/free stuff
+    encoded_.resize(decoded_.size());
+
+    /* open a byte stream for writing and allocate memory for all tiles */
+    opj_buffer_info_t buffer_info;
+    buffer_info.buf = encoded_.data();
+    buffer_info.cur = encoded_.data();
+    buffer_info.len = encoded_.size();
+    l_stream = opj_stream_create_buffer_stream(&buffer_info, OPJ_FALSE);
+
+    /* encode the image */
+    if (!opj_start_compress(l_codec, image, l_stream))  {
+        fprintf(stderr, "failed to encode image: opj_start_compress\n");
+        return; // todo: error handling
+    }
+
+    if(!opj_encode(l_codec, l_stream)) {
+      fprintf(stderr, "failed to encode image: opj_encode\n");
+      return; // todo: error handling
+    }
+
+    if(!opj_end_compress(l_codec, l_stream)) {
+      fprintf(stderr, "failed to encode image: opj_end_compress\n");
+      return; // todo: error handling
+    }
+
+    encoded_.resize(buffer_info.cur - buffer_info.buf);
+
+/*
+    encoded_.open();
     // Setup image size parameters
     ojph::codestream codestream;
     ojph::param_siz siz = codestream.access_siz();
@@ -265,11 +378,13 @@ class HTJ2KEncoder {
     // cleanup
     codestream.flush();
     codestream.close();
+    */
   }
 
   private:
     std::vector<uint8_t> decoded_;
-    EncodedBuffer encoded_;
+    std::vector<uint8_t> encoded_;
+
     FrameInfo frameInfo_;
     size_t decompositions_;
     bool lossless_;

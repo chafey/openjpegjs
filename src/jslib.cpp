@@ -3,7 +3,7 @@
 
 
 #include "J2KDecoder.hpp"
-//#include "HTJ2KEncoder.hpp"
+#include "J2KEncoder.hpp"
 #include "FrameInfo.hpp"
 #include "Point.hpp"
 #include "Size.hpp"
@@ -59,25 +59,24 @@ EMSCRIPTEN_BINDINGS(J2KDecoder) {
     .function("getColorSpace", &J2KDecoder::getColorSpace)
    ;
 }
-/*
 
-EMSCRIPTEN_BINDINGS(HTJ2KEncoder) {
-  class_<HTJ2KEncoder>("HTJ2KEncoder")
+
+EMSCRIPTEN_BINDINGS(J2KEncoder) {
+  class_<J2KEncoder>("J2KEncoder")
     .constructor<>()
-    .function("getDecodedBuffer", &HTJ2KEncoder::getDecodedBuffer)
-    .function("getEncodedBuffer", &HTJ2KEncoder::getEncodedBuffer)
-    .function("encode", &HTJ2KEncoder::encode)
-    .function("setDecompositions", &HTJ2KEncoder::setDecompositions)
-    .function("setQuality", &HTJ2KEncoder::setQuality)
-    .function("setProgressionOrder", &HTJ2KEncoder::setProgressionOrder)
-    .function("setDownSample", &HTJ2KEncoder::setDownSample)
-    .function("setImageOffset", &HTJ2KEncoder::setImageOffset)
-    .function("setTileSize", &HTJ2KEncoder::setTileSize)
-    .function("setTileOffset", &HTJ2KEncoder::setTileOffset)
-    .function("setBlockDimensions", &HTJ2KEncoder::setBlockDimensions)
-    .function("setNumPrecincts", &HTJ2KEncoder::setNumPrecincts)
-    .function("setPrecinct", &HTJ2KEncoder::setPrecinct)
-    .function("setIsUsingColorTransform", &HTJ2KEncoder::setIsUsingColorTransform)
+    .function("getDecodedBuffer", &J2KEncoder::getDecodedBuffer)
+    .function("getEncodedBuffer", &J2KEncoder::getEncodedBuffer)
+    .function("encode", &J2KEncoder::encode)
+    .function("setDecompositions", &J2KEncoder::setDecompositions)
+    .function("setQuality", &J2KEncoder::setQuality)
+    .function("setProgressionOrder", &J2KEncoder::setProgressionOrder)
+    .function("setDownSample", &J2KEncoder::setDownSample)
+    .function("setImageOffset", &J2KEncoder::setImageOffset)
+    .function("setTileSize", &J2KEncoder::setTileSize)
+    .function("setTileOffset", &J2KEncoder::setTileOffset)
+    .function("setBlockDimensions", &J2KEncoder::setBlockDimensions)
+    .function("setNumPrecincts", &J2KEncoder::setNumPrecincts)
+    .function("setPrecinct", &J2KEncoder::setPrecinct)
+    .function("setIsUsingColorTransform", &J2KEncoder::setIsUsingColorTransform)
    ;
 }
-*/

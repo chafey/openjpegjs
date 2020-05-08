@@ -1,3 +1,8 @@
+// Copyright (c) Chris Hafey.
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
 #include "openjpeg.h"
 
 typedef struct opj_buffer_info {
@@ -26,16 +31,18 @@ opj_read_from_buffer (void* pdst, OPJ_SIZE_T len, opj_buffer_info_t* psrc)
 
     return n;
 }
-/*
+
 static OPJ_SIZE_T
 opj_write_to_buffer (void* p_buffer, OPJ_SIZE_T p_nb_bytes,
                      opj_buffer_info_t* p_source_buffer)
 {
-    void* pbuf = p_source_buffer->buf;
-    void* pcur = p_source_buffer->cur;
+    OPJ_BYTE* pbuf = p_source_buffer->buf;
+    OPJ_BYTE* pcur = p_source_buffer->cur;
 
     OPJ_SIZE_T len = p_source_buffer->len;
 
+    // HACK: buffer resizing code removed because we will replace with std::vector impl later
+    /*
     if (0 == len)
         len = 1;
 
@@ -61,14 +68,14 @@ opj_write_to_buffer (void* p_buffer, OPJ_SIZE_T p_nb_bytes,
         p_source_buffer->buf = pbuf;
         p_source_buffer->cur = pbuf + dist;
         p_source_buffer->len = len;
-    }
+    }*/
 
     memcpy (p_source_buffer->cur, p_buffer, p_nb_bytes);
     p_source_buffer->cur += p_nb_bytes;
 
     return p_nb_bytes;
 }
-*/
+
 static OPJ_SIZE_T
 opj_skip_from_buffer (OPJ_SIZE_T len, opj_buffer_info_t* psrc)
 {
@@ -116,10 +123,10 @@ opj_stream_create_buffer_stream (opj_buffer_info_t* psrc, OPJ_BOOL input)
     if (input)
         opj_stream_set_read_function (
             ps, (opj_stream_read_fn)opj_read_from_buffer);
-    /*else
+    else
         opj_stream_set_write_function(
             ps,(opj_stream_write_fn) opj_write_to_buffer);
-*/
+
     opj_stream_set_skip_function (
         ps, (opj_stream_skip_fn)opj_skip_from_buffer);
 
