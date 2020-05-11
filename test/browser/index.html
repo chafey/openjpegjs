@@ -109,8 +109,16 @@ SPDX-License-Identifier: MIT
       <div class="col-md-12">
         <b>Encoding Parameters</b>  
       </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <input id="reversibleKernel" type="checkbox" checked value="">Reversible/Lossless 5/3 Kernel  
       </div>
-        <div class="row">
+      <div class="col-md-4">
+        <input id="addLosslessLayer" type="checkbox" value="">Add lossless layer  
+      </div>
+    </div>
+    <div class="row">
       <div class="col-md-12">
         <span>Lossy Compression Ratio: </span><span id="targetCompressionRatio">1.0</span>
         <input type="range" class="custom-range" id="targetCompressionRatioRange" min="1" max="100" value="1">
@@ -369,11 +377,20 @@ SPDX-License-Identifier: MIT
     // Setup buffer
     const decodedBytes = encoder.getDecodedBuffer(frameInfo);
     decodedBytes.set(uncompressedImageFrame);
+    const reversibleLossless = $('#reversibleKernel').is(":checked"); 
+    const addLosslessLayer = $('#addLosslessLayer').is(":checked"); 
+    const numLayersToEncode = addLosslessLayer ? 2 : 1;
+
     if(compressionRatio > 1.0) {
-      encoder.setQuality(false, compressionRatio);
+      encoder.setQuality(reversibleLossless, numLayersToEncode);
     } else {
-      encoder.setQuality(true, compressionRatio);
+      encoder.setQuality(reversibleLossless, numLayersToEncode);
     }
+    encoder.setCompressionRatio(0, compressionRatio);
+    if(addLosslessLayer) {
+      encoder.setCompressionRatio(1, 1.0);
+    }
+
     encoder.setDecompositions(numDecompositionsToEncode);
     encoder.setProgressionOrder(progressionOrder);
     

@@ -76,5 +76,7 @@ EMSCRIPTEN_BINDINGS(J2KEncoder) {
     .function("setBlockDimensions", &J2KEncoder::setBlockDimensions)
     .function("setNumPrecincts", &J2KEncoder::setNumPrecincts)
     .function("setPrecinct", &J2KEncoder::setPrecinct)
+    .function("setCompressionRatio", &J2KEncoder::setCompressionRatio)
+    
    ;
 }

@@ -33,7 +33,6 @@ class J2KEncoder {
   J2KEncoder() :
     decompositions_(5),
     lossless_(true),
-    compressionRatio_(1.0f),
     progressionOrder_(2), // RPCL
     blockDimensions_(64,64)
   {
@@ -109,13 +108,22 @@ class J2KEncoder {
   }
 
   /// <summary>
+  /// Sets which wavelet to use (9/7 lossy or 5/3 lossless) and
+  /// how many layers to encode.  Caller must set compression
+  /// ratio for each layer via setCompressionRatio()
+  /// </summary>
+  void setQuality(bool lossless, size_t numEncodeLayers) {
+    lossless_ = lossless;
+    layerCompressionRatios_.resize(numEncodeLayers);
+  }
+
+  /// <summary>
   /// Sets which wavelet to use (9/7 lossy or 5/3 losslsess) and
   /// what compressionRatio to achieve - lossy quantization
   /// will be applied if necessary
   /// </summary>
-  void setQuality(bool lossless, float compressionRatio) {
-    lossless_ = lossless;
-    compressionRatio_ = compressionRatio;
+  void setCompressionRatio(size_t layer, float  compressionRatio) {
+    layerCompressionRatios_[layer] = compressionRatio;
   }
 
   /// <summary>
@@ -264,12 +272,11 @@ class J2KEncoder {
     parameters.numresolution = decompositions_ + 1;
     parameters.irreversible = !lossless_;
 
-    if(compressionRatio_ > 1.0f) {
-      parameters.tcp_numlayers = 1;
-      parameters.tcp_rates[0] = compressionRatio_;
-      //parameters.tcp_rates[1] = 1.0f;
-      parameters.cp_disto_alloc = 1;
+    parameters.tcp_numlayers = layerCompressionRatios_.size();
+    for(size_t layer = 0; layer < layerCompressionRatios_.size(); layer++) {
+      parameters.tcp_rates[layer] = layerCompressionRatios_[layer];
     }
+    parameters.cp_disto_alloc = 1;
 
     // TODO: add support for JP2 encoding via config parameter
     l_codec = opj_create_compress(OPJ_CODEC_J2K);
@@ -325,7 +332,7 @@ class J2KEncoder {
     FrameInfo frameInfo_;
     size_t decompositions_;
     bool lossless_;
-    float compressionRatio_;
+    std::vector<float> layerCompressionRatios_;
     size_t progressionOrder_;
 
     std::vector<Point> downSamples_;
