@@ -97,6 +97,12 @@ SPDX-License-Identifier: MIT
     </div>
     <div class="row">
       <div class="col-md-12">
+        <span>Encoded Bytes Read: </span><span id="encodedBytesRead">0</span>
+        <input type="range" class="custom-range" id="encodedBytesReadRange" min="0" max="5" value="0">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
         <span>Level: </span><span id="decodeLevel">0</span>
         <input type="range" class="custom-range" id="decodeLevelRange" min="0" max="5" value="0">
       </div>
@@ -164,7 +170,12 @@ SPDX-License-Identifier: MIT
   let decoder = undefined;
   let encoder = undefined;
   let encodedBitStream = undefined;
+
+  // upon loading a decoded bitstream, set to the decoded data so it can be reencoded
+  // as part of the lossy encoding functionality.  NOTE - is not changed after load  
   let uncompressedImageFrame = undefined;
+  let fullEncodedBitStream = undefined; 
+
   let frameInfo = undefined;
   let compressionRatio = 0;
   let minMax = undefined;
@@ -453,7 +464,10 @@ SPDX-License-Identifier: MIT
     })
     .then((arrayBuffer) => {
       //try {
+        fullEncodedBitStream = new Uint8Array(arrayBuffer);
         encodedBitStream = new Uint8Array(arrayBuffer);
+        $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+        $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);
         decode();
         uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
         uncompressedImageFrame.set(decoder.getDecodedBuffer());
@@ -560,6 +574,23 @@ SPDX-License-Identifier: MIT
         $('#status').text('OK - ' + iterations + ' iterations encode/decode');
       }, 1);
     });
+
+    $('#encodedBytesReadRange').on('input', function(e) {
+      numBytes = parseInt($(this).val());
+      let length = fullEncodedBitStream.length - numBytes;
+      encodedBitStream = new Uint8Array(length);
+      for(let i=0; i < length; i++) {
+        encodedBitStream[i] = fullEncodedBitStream[i];
+      }
+      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+      try {
+        decode();
+      } catch(ex) {
+        console.log(ex);
+      } finally {
+      }
+    });
+
 
     $('#bytesDecodedRange').on('input', function(e) {
       bytePercent = parseFloat($(this).val());
