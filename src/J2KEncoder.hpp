@@ -95,7 +95,7 @@ class J2KEncoder {
   /// exported to JavaScript, it is intended to be called by C++ code
   /// </summary>
   const std::vector<uint8_t>& getEncodedBytes() const {
-    return encoded_.getBuffer();
+    return encoded_;
   }
 #endif
 

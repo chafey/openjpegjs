@@ -8,8 +8,8 @@
 #include <time.h> 
 #include <algorithm>
 
-#include "../../src/HTJ2KDecoder.hpp"
-#include "../../src/HTJ2KEncoder.hpp"
+#include "../../src/J2KDecoder.hpp"
+#include "../../src/J2KEncoder.hpp"
 
 void readFile(std::string fileName, std::vector<uint8_t>& vec) {
     // open the file:
@@ -59,9 +59,12 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
 }
 
 void decodeFile(const char* path) {
-    HTJ2KDecoder decoder;
+    J2KDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
     readFile(path, encodedBytes);
+
+    // cut buffer in half to test partial decoding
+    encodedBytes.resize(encodedBytes.size() - 25050);
 
     timespec start, finish, delta;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -69,7 +72,9 @@ void decodeFile(const char* path) {
     //Size resolutionAtLevel = decoder.calculateDecompositionLevel(1);
     //std::cout << resolutionAtLevel.width << ',' << resolutionAtLevel.height << std::endl;
 
-    decoder.decodeSubResolution(1);
+
+
+    decoder.decodeSubResolution(0, 0);//1, 1);
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
@@ -78,7 +83,7 @@ void decodeFile(const char* path) {
 }
 
 void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPath) {
-    HTJ2KEncoder encoder;
+    J2KEncoder encoder;
     std::vector<uint8_t>& rawBytes = encoder.getDecodedBytes(frameInfo);
     readFile(inPath, rawBytes);
 
@@ -99,9 +104,10 @@ void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPa
 }
 
 int main(int argc, char** argv) {
-    decodeFile("test/fixtures/j2c/CT1.j2c");
+    //decodeFile("test/fixtures/j2k/CT1-0decomp.j2k");
     //decodeFile("test/fixtures/j2c/CT2.j2c");
     //decodeFile("test/fixtures/j2c/MG1.j2c");
+    decodeFile("test/fixtures/j2k/NM1.j2k");
 
     //encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, "test/fixtures/j2c/CT1.j2c");
     return 0;

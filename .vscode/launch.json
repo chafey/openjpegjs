@@ -8,7 +8,7 @@
             "name": "g++ - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/test/cpp/cpptest",
+            "program": "${workspaceFolder}/build-native/extern/openjpeg/bin/cpptest",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -22,7 +22,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "Build",
+            "preLaunchTask": "Build-native",
             "miDebuggerPath": "gdb"
         }
     ]

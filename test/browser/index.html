@@ -415,14 +415,15 @@ SPDX-License-Identifier: MIT
     $('#compressionRatio').text('' + (decodedBuffer.length /encodedBitStream.length).toFixed(2) + ":1");
    
     let subResolutions = '';
-    for(let i=0; i < decoder.getNumDecompositions(); i++) {
+    for(let i=0; i < decoder.getNumDecompositions() + 1; i++) {
       const resolution = decoder.calculateSizeAtDecompositionLevel(i);
       subResolutions += resolution.width + 'x' + resolution.height + ' ';
     }
     $('#subResolutions').text('' + subResolutions);
 
     frameInfo.width = resolutionAtLevel.width;
-    frameInfo.height = resolutionAtLevel.height;    //console.log(frameInfo);
+    frameInfo.height = resolutionAtLevel.height;    
+    console.log(frameInfo);
     display(frameInfo, decodedBuffer, 2);
     frameInfo = decoder.getFrameInfo();
   }
@@ -457,27 +458,34 @@ SPDX-License-Identifier: MIT
     $('#encodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
   }
 
+  function loadArrayBuffer(arrayBuffer) {
+    try {
+      fullEncodedBitStream = new Uint8Array(arrayBuffer);
+      numBytes = 0;// 122003;
+      encodedBitStream = new Uint8Array(arrayBuffer, 0, fullEncodedBitStream.length -numBytes);
+      //encodedBitStream = new Uint8Array(arrayBuffer);
+      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' / ' + fullEncodedBitStream.length.toLocaleString() + ' bytes ');
+      $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);
+      //$('#encodedBytesReadRange').attr('max', 512);
+      decode();
+      uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
+      uncompressedImageFrame.set(decoder.getDecodedBuffer());
+    }
+    catch(ex) {
+      $('#status').text('Exception thrown while parsing ' + ex);
+    }
+  }
+
   function load(url) {
     fetch(url)
     .then((response) => {
       return response.arrayBuffer();
     })
     .then((arrayBuffer) => {
-      //try {
-        fullEncodedBitStream = new Uint8Array(arrayBuffer);
-        encodedBitStream = new Uint8Array(arrayBuffer);
-        $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
-        $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);
-        decode();
-        uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
-        uncompressedImageFrame.set(decoder.getDecodedBuffer());
-      //}
-      //catch(ex) {
-      //  $('#status').text('Exception thrown while parsing ' + ex);
-      //}
-    });/*.catch(function() {
+      loadArrayBuffer(arrayBuffer);
+    }).catch(function() {
       $('#status').text('error loading ' + url);
-    });*/
+    });
   }
 
   function reset() {
@@ -513,9 +521,10 @@ SPDX-License-Identifier: MIT
   Module.onRuntimeInitialized = async _ => {
     decoder = new Module.J2KDecoder();
     encoder = new Module.J2KEncoder();
+    //init('../../test/fixtures/j2k/CT1-0decomp.j2k');
+    init('../../test/fixtures/j2k/CT1.j2k');
     //init('../../test/fixtures/j2k/US1.j2k');
     //init('../../test/fixtures/j2k/XA1.j2k');
-    init('../../test/fixtures/j2k/CT1.j2k');
     //init('../../test/fixtures/j2c/MG1.j2c');
     //init('../../test/fixtures/j2c/MR2.j2c');
     //init('../../extern/OpenJPH/subprojects/js/html/test.j2c');
@@ -582,7 +591,7 @@ SPDX-License-Identifier: MIT
       for(let i=0; i < length; i++) {
         encodedBitStream[i] = fullEncodedBitStream[i];
       }
-      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' / ' + fullEncodedBitStream.length.toLocaleString() + ' bytes ');
       try {
         decode();
       } catch(ex) {
@@ -627,17 +636,10 @@ SPDX-License-Identifier: MIT
       // this UI is only built for a single file so just dump the first one
       var file = files[0];
 
-      var fileReader = new FileReader();
+      const fileReader = new FileReader();
       fileReader.onload = function (e) {
-          var fileAsArrayBuffer = e.target.result;
-          encodedBitStream = new Uint8Array(fileAsArrayBuffer);
-          reset();
-          try {
-            decode();
-          }
-          catch(ex) {
-            $('#status').text('Exception thrown while parsing ' + ex);
-          }
+        const fileAsArrayBuffer = e.target.result;
+        loadArrayBuffer(fileAsArrayBuffer);
       };
       fileReader.readAsArrayBuffer(file);
     }

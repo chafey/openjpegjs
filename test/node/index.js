@@ -5,7 +5,10 @@ let openjegpjs = require('../../dist/openjpegjs.js');
 const fs = require('fs')
 
 function decode(encodedImagePath, iterations = 1) {
-  const encodedBitStream = fs.readFileSync(encodedImagePath);
+  encodedBitStream = fs.readFileSync(encodedImagePath);
+  const numBytes = 500;
+  encodedBitStream = encodedBitStream.slice(0, encodedBitStream.length - numBytes);
+  console.log('encodedBitStream.length=', encodedBitStream.length);
   const decoder = new openjegpjs.J2KDecoder();
   const encodedBuffer = decoder.getEncodedBuffer(encodedBitStream.length);
   encodedBuffer.set(encodedBitStream);
@@ -57,10 +60,13 @@ function encode(pathToUncompressedImageFrame, imageFrame, pathToJ2CFile, iterati
   }
 
 openjegpjs.onRuntimeInitialized = async _ => {
-  decode('../fixtures/j2k/image.j2k');
+  //decode('../fixtures/j2k/CT1-0decomp.j2k');
+  decode('../fixtures/j2k/NM1.j2k');
+  //decode('../fixtures/j2k/CT1.j2k');
+  //decode('../fixtures/j2k/image.j2k');
   //decode('../../extern/OpenJPH/subprojects/js/html/test.j2c');
 
-  encode('../fixtures/raw/CT1.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2k/CT1-new.j2k');
+  //encode('../fixtures/raw/CT1.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2k/CT1-new.j2k');
   //encode('../fixtures/raw/CT2.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2c/CT2.j2c');
   //encode('../fixtures/raw/MG1.RAW', {width: 3064, height: 4774, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/MG1.j2c');
   //encode('../fixtures/raw/MR1.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2c/MR1.j2c');
