@@ -1,15 +1,17 @@
 // Copyright (c) Chris Hafey.
 // SPDX-License-Identifier: MIT
 
-let openjegpjs = require('../../dist/openjpegjs.js');
+let openjpegjs = require('../../dist/openjpegjs.js');
+let openjpegwasm = require('../../dist/openjpegwasm.js');
+
 const fs = require('fs')
 
-function decode(encodedImagePath, iterations = 1) {
+function decode(openjpeg, encodedImagePath, iterations = 1) {
   encodedBitStream = fs.readFileSync(encodedImagePath);
   const numBytes = 500;
   encodedBitStream = encodedBitStream.slice(0, encodedBitStream.length - numBytes);
   console.log('encodedBitStream.length=', encodedBitStream.length);
-  const decoder = new openjegpjs.J2KDecoder();
+  const decoder = new openjpeg.J2KDecoder();
   const encodedBuffer = decoder.getEncodedBuffer(encodedBitStream.length);
   encodedBuffer.set(encodedBitStream);
 
@@ -32,10 +34,10 @@ function decode(encodedImagePath, iterations = 1) {
   decoder.delete();
 }
 
-function encode(pathToUncompressedImageFrame, imageFrame, pathToJ2CFile, iterations = 1) {
+function encode(openjpeg, pathToUncompressedImageFrame, imageFrame, pathToJ2CFile, iterations = 1) {
     const uncompressedImageFrame = fs.readFileSync(pathToUncompressedImageFrame);
     console.log('uncompressedImageFrame.length:', uncompressedImageFrame.length)
-    const encoder = new openjegpjs.J2KEncoder();
+    const encoder = new openjpeg.J2KEncoder();
     const decodedBytes = encoder.getDecodedBuffer(imageFrame);
     decodedBytes.set(uncompressedImageFrame);
     //encoder.setQuality(false, 0.001);
@@ -59,10 +61,13 @@ function encode(pathToUncompressedImageFrame, imageFrame, pathToJ2CFile, iterati
     encoder.delete();
   }
 
-openjegpjs.onRuntimeInitialized = async _ => {
+  //decode('../fixtures/j2k/CT1.j2k');
+  //decode('../fixtures/j2k/CT1.j2k');
+
+function main(openjpeg) {
   //decode('../fixtures/j2k/CT1-0decomp.j2k');
   //decode('../fixtures/j2k/NM1.j2k');
-  decode('../fixtures/j2k/CT1.j2k');
+  decode(openjpeg, '../fixtures/j2k/CT1.j2k', 1);
   //decode('../fixtures/j2k/image.j2k');
   //decode('../../extern/OpenJPH/subprojects/js/html/test.j2c');
 
@@ -80,5 +85,18 @@ openjegpjs.onRuntimeInitialized = async _ => {
   //encode('../fixtures/raw/RG3.RAW', {width: 1760, height: 1760, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/RG3.j2c');
   //encode('../fixtures/raw/SC1.RAW', {width: 2048, height: 2487, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/SC1.j2c');
   //encode('../fixtures/raw/XA1.RAW', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/XA1.j2c');
+}
 
+if(openjpegjs) {
+  console.log('testing openjpegjs...');
+  openjpegjs().then(function(openjpeg) {
+    main(openjpeg);
+  });
+}
+
+if(typeof openjpegwasm !== 'undefined') {
+  console.log('testing openjpegwasm...');
+  openjpegwasm().then(function(OpenJPEGWASM) {
+    main(OpenJPEGWASM);
+  });
 }

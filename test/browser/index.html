@@ -8,6 +8,7 @@ SPDX-License-Identifier: MIT
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">   
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <script type="text/javascript" src="../../dist/openjpegjs.js"></script>
+    <script type="text/javascript" src="../../dist/openjpegwasm.js"></script>
 </head>
 <body>
 <div class="container">
@@ -40,6 +41,7 @@ SPDX-License-Identifier: MIT
           <option value="../../test/fixtures/j2k/XA1.j2k">XA1</option>
         </select>
         <button id="benchmark">Benchmark</button>
+        <label><input id="useWASM" checked type="checkbox" value="">Use WASM</label>   
         <span>Status:</span><span id="status"></span>
       </div>
     </div>
@@ -169,6 +171,10 @@ SPDX-License-Identifier: MIT
 <script>
   let decoder = undefined;
   let encoder = undefined;
+  let decoderjs = undefined;
+  let encoderjs = undefined;
+  let decoderwasm = undefined;
+  let encoderwasm = undefined;
   let encodedBitStream = undefined;
 
   // upon loading a decoded bitstream, set to the decoded data so it can be reencoded
@@ -517,9 +523,10 @@ SPDX-License-Identifier: MIT
     load(path);
   }
 
-  Module.onRuntimeInitialized = async _ => {
-    decoder = new Module.J2KDecoder();
-    encoder = new Module.J2KEncoder();
+ 
+
+  function main() {
+
     //init('../../test/fixtures/j2k/CT1-0decomp.j2k');
     init('../../test/fixtures/j2k/CT1.j2k');
     //init('../../test/fixtures/j2k/US1.j2k');
@@ -538,6 +545,18 @@ SPDX-License-Identifier: MIT
       if (this.checked) {
         decode();
       } else {
+        decode();
+      }
+    });
+
+    $('#useWASM').change(function() {
+      if (this.checked) {
+        encoder = encoderwasm;
+        decoder = decoderwasm;
+        decode();
+      } else {
+        encoder = encoderjs;
+        decoder = decoderjs;
         decode();
       }
     });
@@ -576,7 +595,7 @@ SPDX-License-Identifier: MIT
     $('#benchmark').click(function(e) {
       $('#status').text('Please wait while benchmark runs....');
       setTimeout(() => {
-        const iterations = 50;
+        const iterations = 5;
         decode(iterations)
         encode(iterations)
         $('#status').text('OK - ' + iterations + ' iterations encode/decode');
@@ -662,5 +681,23 @@ SPDX-License-Identifier: MIT
     window.open(url);
     window.URL.revokeObjectURL(url);
   });
+
+
+  OpenJPEGJS().then(function(openjpegjs) {
+    console.log('openjpegjs', openjpegjs);
+    decoderjs = new openjpegjs.J2KDecoder();
+    encoderjs = new openjpegjs.J2KEncoder();
+  });
+
+  OpenJPEGWASM().then(function(openjpegwasm) {
+    console.log('openjpegwasm', openjpegwasm);
+    decoderwasm = new openjpegwasm.J2KDecoder();
+    encoderwasm = new openjpegwasm.J2KEncoder();
+    encoder = encoderwasm;
+    decoder = decoderwasm;
+    main();
+  });
+
+
 </script>
 </html>
