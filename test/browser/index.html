@@ -687,6 +687,11 @@ SPDX-License-Identifier: MIT
     console.log('openjpegjs', openjpegjs);
     decoderjs = new openjpegjs.J2KDecoder();
     encoderjs = new openjpegjs.J2KEncoder();
+    decoder = decoderjs;
+    encoder = encoderjs;
+    $('#useWASM').prop('checked', false);
+    $('#useWASM').prop('disabled', true);
+    main();
   });
 
   OpenJPEGWASM().then(function(openjpegwasm) {
@@ -695,9 +700,9 @@ SPDX-License-Identifier: MIT
     encoderwasm = new openjpegwasm.J2KEncoder();
     encoder = encoderwasm;
     decoder = decoderwasm;
-    main();
+    $('#useWASM').prop('checked', true);
+    $('#useWASM').prop('disabled', false);
   });
-
 
 </script>
 </html>
