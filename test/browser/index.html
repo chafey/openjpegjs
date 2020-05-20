@@ -41,7 +41,7 @@ SPDX-License-Identifier: MIT
           <option value="../../test/fixtures/j2k/XA1.j2k">XA1</option>
         </select>
         <button id="benchmark">Benchmark</button>
-        <label><input id="useWASM" checked type="checkbox" value="">Use WASM</label>   
+        <label><input id="useWASM" disabled type="checkbox" value="">Use WASM</label>   
         <span>Status:</span><span id="status"></span>
       </div>
     </div>
@@ -690,7 +690,6 @@ SPDX-License-Identifier: MIT
     decoder = decoderjs;
     encoder = encoderjs;
     $('#useWASM').prop('checked', false);
-    $('#useWASM').prop('disabled', true);
     main();
   });
 
@@ -703,6 +702,5 @@ SPDX-License-Identifier: MIT
     $('#useWASM').prop('checked', true);
     $('#useWASM').prop('disabled', false);
   });
-
 </script>
 </html>
