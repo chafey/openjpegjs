@@ -61,8 +61,8 @@ function encode(pathToUncompressedImageFrame, imageFrame, pathToJ2CFile, iterati
 
 openjegpjs.onRuntimeInitialized = async _ => {
   //decode('../fixtures/j2k/CT1-0decomp.j2k');
-  decode('../fixtures/j2k/NM1.j2k');
-  //decode('../fixtures/j2k/CT1.j2k');
+  //decode('../fixtures/j2k/NM1.j2k');
+  decode('../fixtures/j2k/CT1.j2k');
   //decode('../fixtures/j2k/image.j2k');
   //decode('../../extern/OpenJPH/subprojects/js/html/test.j2c');
 

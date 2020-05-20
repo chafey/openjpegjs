@@ -229,10 +229,8 @@ class J2KDecoder {
       // http://dicom.nema.org/medical/dicom/2017e/output/chtml/part05/sect_A.4.4.html
       if( ((OPJ_INT32*)encoded_.data())[0] == J2K_MAGIC_NUMBER ){
           l_codec = opj_create_decompress(OPJ_CODEC_J2K);
-          printf("OPJ_CODEC_J2K\n");
       }else{
           l_codec = opj_create_decompress(OPJ_CODEC_JP2);
-          printf("OPJ_CODEC_JP2\n");
       }
 
       opj_set_info_handler(l_codec, info_callback,00);

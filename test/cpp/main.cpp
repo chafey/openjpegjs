@@ -64,7 +64,9 @@ void decodeFile(const char* path) {
     readFile(path, encodedBytes);
 
     // cut buffer in half to test partial decoding
-    encodedBytes.resize(encodedBytes.size() - 25050);
+    const size_t numBytes = 25050;
+    //const size_t numBytes = 0;
+    encodedBytes.resize(encodedBytes.size() - numBytes);
 
     timespec start, finish, delta;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -104,10 +106,10 @@ void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPa
 }
 
 int main(int argc, char** argv) {
-    //decodeFile("test/fixtures/j2k/CT1-0decomp.j2k");
+    decodeFile("test/fixtures/j2k/CT1-0decomp.j2k");
     //decodeFile("test/fixtures/j2c/CT2.j2c");
     //decodeFile("test/fixtures/j2c/MG1.j2c");
-    decodeFile("test/fixtures/j2k/NM1.j2k");
+    //decodeFile("test/fixtures/j2k/NM1.j2k");
 
     //encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, "test/fixtures/j2c/CT1.j2c");
     return 0;
