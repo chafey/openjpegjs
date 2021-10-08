@@ -58,30 +58,34 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
     }
 }
 
-void decodeFile(const char* path) {
+void decodeFile(const char* path, size_t iterations = 1) {
     J2KDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
     readFile(path, encodedBytes);
 
     // cut buffer in half to test partial decoding
-    const size_t numBytes = 25050;
+    //const size_t numBytes = 25050;
     //const size_t numBytes = 0;
-    encodedBytes.resize(encodedBytes.size() - numBytes);
+    //encodedBytes.resize(encodedBytes.size() - numBytes);
 
     timespec start, finish, delta;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-    decoder.readHeader();
-    //Size resolutionAtLevel = decoder.calculateDecompositionLevel(1);
-    //std::cout << resolutionAtLevel.width << ',' << resolutionAtLevel.height << std::endl;
-
-
-
-    decoder.decodeSubResolution(0, 0);//1, 1);
+    for(int i=0; i < iterations; i++) {
+        decoder.readHeader();
+        //Size resolutionAtLevel = decoder.calculateDecompositionLevel(1);
+        //std::cout << resolutionAtLevel.width << ',' << resolutionAtLevel.height << std::endl;
+        //decoder.decodeSubResolution(0, 0);//1, 1);
+        decoder.decode();
+    }
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
-    const double ms = (double)(delta.tv_nsec) / 1000000.0;
-    printf("Decode of %s took %f ms\n", path, ms);
+    //printf("%d.%d\n",delta.tv_sec, delta.tv_nsec);
+    const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
+    //printf("total ns = %f\n", ns);
+    //printf("ns per decode = %f\n", ns/(double)iterations);
+    //printf("ms per decode = %f\n", ns/(double)iterations/1000000.0);
+    printf("Decode of %s took %f ms\n", path, ns/(double)iterations/1000000.0);
 }
 
 void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPath) {
@@ -96,8 +100,8 @@ void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPa
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
-    const double ms = (double)(delta.tv_nsec) / 1000000.0;
-    printf("Encode of %s took %f ms\n", inPath, ms);
+    const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
+    printf("Encode of %s took %f ms\n", inPath, ns/1000000.0);
 
     if(outPath) {
         const std::vector<uint8_t>& encodedBytes = encoder.getEncodedBytes();
@@ -106,7 +110,8 @@ void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPa
 }
 
 int main(int argc, char** argv) {
-    decodeFile("test/fixtures/j2k/CT1-0decomp.j2k");
+    decodeFile("test/fixtures/j2k/CT1.j2k");
+    decodeFile("test/fixtures/j2k/CT1.j2k", 100);
     //decodeFile("test/fixtures/j2c/CT2.j2c");
     //decodeFile("test/fixtures/j2c/MG1.j2c");
     //decodeFile("test/fixtures/j2k/NM1.j2k");

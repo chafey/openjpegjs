@@ -3,8 +3,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-#FROM mcr.microsoft.com/vscode/devcontainers/base:0-debian-9
-FROM trzeci/emscripten
+FROM emscripten/emsdk:2.0.31
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,14 +16,15 @@ ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+
 # Configure apt and install packages
 RUN apt-get update \
     #
     # Install C++ tools
-    #&& apt-get -y install build-essential cmake cppcheck valgrind \
     && apt-get -y install build-essential cppcheck valgrind kcachegrind \
-    # version 3.17 of cmake
-    && wget -qO- "https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C /usr/local \
+    # version 3.21 of cmake
+    #&& wget --no-check-certificate -qO- "https://github.com/Kitware/CMake/releases/download/v3.21.3/cmake-3.21.3-linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C /usr/local \
+
     # sudo
     && apt-get -y install sudo \
     #
