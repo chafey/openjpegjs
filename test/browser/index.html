@@ -669,6 +669,7 @@ SPDX-License-Identifier: MIT
 
   OpenJPEGWASM().then(function(openjpegjs) {
     console.log('openjpegjs', openjpegjs);
+    $("#version").text(openjpegjs.getVersion())
     decoderjs = new openjpegjs.J2KDecoder();
     encoderjs = new openjpegjs.J2KEncoder();
     decoder = decoderjs;
