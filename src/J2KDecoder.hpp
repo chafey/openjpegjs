@@ -240,6 +240,7 @@ class J2KDecoder {
       opj_set_default_decoder_parameters(&parameters);
       parameters.cp_reduce = decompositionLevel;
       parameters.cp_layer = decodeLayer_;
+
       //opj_set_decoded_resolution_factor(l_codec, 1);
       // set stream
       opj_buffer_info_t buffer_info;
@@ -255,6 +256,8 @@ class J2KDecoder {
           opj_destroy_codec(l_codec);
           return;
       }
+      // disable strict mode so we can partially decode J2K streams
+      opj_decoder_set_strict_mode(l_codec, OPJ_FALSE);
 
       /* Read the main header of the codestream and if necessary the JP2 boxes*/
       if(! opj_read_header(l_stream, l_codec, &image)){
