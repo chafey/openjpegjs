@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 <body>
 <div class="container">
     <div class="page-header">
-        <h1>JPEG2000 Decoding with WebAssembly</h1>
+        <h1>JPEG2000 Decoding with WebAssembly (v<span id="version"></span>)</h1>
         <p class="lead">
           Select an image or drag and drop a JPEG2000 file.  Files dropped here remain local in your browser, they are not uploaded anywhere.
       </p>
@@ -695,6 +695,7 @@ SPDX-License-Identifier: MIT
 
   OpenJPEGWASM().then(function(openjpegwasm) {
     console.log('openjpegwasm', openjpegwasm);
+    $("#version").text(openjpegwasm.getVersion())
     decoderwasm = new openjpegwasm.J2KDecoder();
     encoderwasm = new openjpegwasm.J2KEncoder();
     encoder = encoderwasm;
