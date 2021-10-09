@@ -16,6 +16,7 @@ endif()
 
 option(BUILD_SHARED_LIBS "" OFF)
 option(BUILD_STATIC_LIBS "" ON)
+option(OPJ_USE_THREAD "Build with thread/mutex support " OFF)
 
 # add the external library
 add_subdirectory(extern/openjpeg EXCLUDE_FROM_ALL)

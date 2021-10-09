@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 let openjpegjs = require('../../dist/openjpegjs.js');
-let openjpegwasm = require('../../dist/openjpegwasm.js');
 
 const fs = require('fs')
 
@@ -94,9 +93,3 @@ if(openjpegjs) {
   });
 }
 
-if(typeof openjpegwasm !== 'undefined') {
-  console.log('testing openjpegwasm...');
-  openjpegwasm().then(function(OpenJPEGWASM) {
-    main(OpenJPEGWASM);
-  });
-}

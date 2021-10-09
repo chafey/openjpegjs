@@ -8,7 +8,6 @@ SPDX-License-Identifier: MIT
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">   
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <script type="text/javascript" src="../../dist/openjpegjs.js"></script>
-    <script type="text/javascript" src="../../dist/openjpegwasm.js"></script>
 </head>
 <body>
 <div class="container">
@@ -41,7 +40,6 @@ SPDX-License-Identifier: MIT
           <option value="../../test/fixtures/j2k/XA1.j2k">XA1</option>
         </select>
         <button id="benchmark">Benchmark</button>
-        <label><input id="useWASM" disabled type="checkbox" value="">Use WASM</label>   
         <span>Status:</span><span id="status"></span>
       </div>
     </div>
@@ -173,8 +171,6 @@ SPDX-License-Identifier: MIT
   let encoder = undefined;
   let decoderjs = undefined;
   let encoderjs = undefined;
-  let decoderwasm = undefined;
-  let encoderwasm = undefined;
   let encodedBitStream = undefined;
 
   // upon loading a decoded bitstream, set to the decoded data so it can be reencoded
@@ -549,18 +545,6 @@ SPDX-License-Identifier: MIT
       }
     });
 
-    $('#useWASM').change(function() {
-      if (this.checked) {
-        encoder = encoderwasm;
-        decoder = decoderwasm;
-        decode();
-      } else {
-        encoder = encoderjs;
-        decoder = decoderjs;
-        decode();
-      }
-    });
-
     $('#decodeLayerRange').on('input', function(e) {
       decodeLayer = parseInt($(this).val());
       $('#decodeLayer').text('' + decodeLayer);
@@ -683,25 +667,14 @@ SPDX-License-Identifier: MIT
   });
 
 
-  OpenJPEGJS().then(function(openjpegjs) {
+  OpenJPEGWASM().then(function(openjpegjs) {
     console.log('openjpegjs', openjpegjs);
     decoderjs = new openjpegjs.J2KDecoder();
     encoderjs = new openjpegjs.J2KEncoder();
     decoder = decoderjs;
     encoder = encoderjs;
-    $('#useWASM').prop('checked', false);
     main();
   });
 
-  OpenJPEGWASM().then(function(openjpegwasm) {
-    console.log('openjpegwasm', openjpegwasm);
-    $("#version").text(openjpegwasm.getVersion())
-    decoderwasm = new openjpegwasm.J2KDecoder();
-    encoderwasm = new openjpegwasm.J2KEncoder();
-    encoder = encoderwasm;
-    decoder = decoderwasm;
-    $('#useWASM').prop('checked', true);
-    $('#useWASM').prop('disabled', false);
-  });
 </script>
 </html>
