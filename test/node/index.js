@@ -10,7 +10,7 @@ function decodeFile(openjpeg, imageName, iterations = 1) {
   encodedBitStream = fs.readFileSync(encodedImagePath)
   const decoder = new openjpeg.J2KDecoder()
   const result = codecHelper.decode(decoder, encodedBitStream, iterations)
-  console.log("Decode of " + imageName + " took " +  result.decodeTimeMS + " ms (" + iterations + " iterations)");
+  console.log("WASM-decode   " + imageName + " " +  result.decodeTimeMS);
   decoder.delete();
   return result
 }
@@ -21,13 +21,13 @@ function encodeFile(openjpeg, imageName, imageFrame, iterations = 1) {
   const encoder = new openjpeg.J2KEncoder();
   //encoder.setQuality(false, 0.001);
   const result = codecHelper.encode(encoder, uncompressedImageFrame, imageFrame, iterations)
-  console.log("Encode of " + imageName + " took " +  result.encodeTimeMS + " ms (" + iterations + " iterations)");
+  console.log("WASM-encode   " + imageName + " " +  result.encodeTimeMS);
   encoder.delete();
   return result
 }
 
 function main(openjpeg) {
-  const iterations = 1
+  const iterations = (process.argv.length > 2) ? parseInt(process.argv[2]) : 1
   encodeFile(openjpeg, 'CT1', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations)
   encodeFile(openjpeg, 'CT2', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
   encodeFile(openjpeg, 'MG1', {width: 3064, height: 4774, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
@@ -44,6 +44,7 @@ function main(openjpeg) {
   decodeFile(openjpeg, 'CT1', iterations)
   decodeFile(openjpeg, 'CT2', iterations)
   decodeFile(openjpeg, 'MG1', iterations)
+  decodeFile(openjpeg, 'MR1', iterations)
   decodeFile(openjpeg, 'MR2', iterations)
   decodeFile(openjpeg, 'MR3', iterations)
   decodeFile(openjpeg, 'MR4', iterations)
@@ -56,7 +57,7 @@ function main(openjpeg) {
 }
 
 if(openjpegjs) {
-  console.log('testing openjpegjs...');
+  //console.log('testing openjpegjs...');
   openjpegjs().then(function(openjpeg) {
     main(openjpeg);
   });

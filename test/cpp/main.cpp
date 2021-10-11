@@ -58,10 +58,14 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
     }
 }
 
-void decodeFile(const char* path, size_t iterations = 1) {
+void decodeFile(const char* imageName, size_t iterations = 1) {
+    std::string inPath = "test/fixtures/j2k/";
+    inPath += imageName;
+    inPath += ".j2k";
+    
     J2KDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
-    readFile(path, encodedBytes);
+    readFile(inPath, encodedBytes);
 
     // cut buffer in half to test partial decoding
     //const size_t numBytes = 25050;
@@ -80,15 +84,15 @@ void decodeFile(const char* path, size_t iterations = 1) {
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
-    //printf("%d.%d\n",delta.tv_sec, delta.tv_nsec);
     const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
-    //printf("total ns = %f\n", ns);
-    //printf("ns per decode = %f\n", ns/(double)iterations);
-    //printf("ms per decode = %f\n", ns/(double)iterations/1000000.0);
-    printf("Decode of %s took %f ms\n", path, ns/(double)iterations/1000000.0);
+    printf("Native-decode %s %f\n", imageName, ns/1000000.0);
 }
 
-void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPath) {
+void encodeFile(const char* imageName, const FrameInfo frameInfo, size_t iterations = 1) {
+    std::string inPath = "test/fixtures/raw/";
+    inPath += imageName;
+    inPath += ".RAW";
+
     J2KEncoder encoder;
     std::vector<uint8_t>& rawBytes = encoder.getDecodedBytes(frameInfo);
     readFile(inPath, rawBytes);
@@ -101,21 +105,42 @@ void encodeFile(const char* inPath, const FrameInfo frameInfo, const char* outPa
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
     const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
-    printf("Encode of %s took %f ms\n", inPath, ns/1000000.0);
+    printf("Native-encode %s %f\n", imageName, ns/1000000.0);
 
-    if(outPath) {
+    /*if(outPath) {
         const std::vector<uint8_t>& encodedBytes = encoder.getEncodedBytes();
         writeFile(outPath, encodedBytes);
-    }
+    }*/
 }
 
 int main(int argc, char** argv) {
-    decodeFile("test/fixtures/j2k/CT1.j2k");
-    decodeFile("test/fixtures/j2k/CT1.j2k", 100);
-    //decodeFile("test/fixtures/j2c/CT2.j2c");
-    //decodeFile("test/fixtures/j2c/MG1.j2c");
-    //decodeFile("test/fixtures/j2k/NM1.j2k");
+  const size_t iterations = (argc > 1) ? atoi(argv[1]) : 1;
+  encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
+  encodeFile("CT2", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
+  encodeFile("MG1", {.width = 3064, .height = 4774, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("MR1", {.width = 512, .height = 512, .bitsPerSample =  16, .componentCount = 1, .isSigned = true}, iterations);
+  encodeFile("MR2", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("MR3", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
+  encodeFile("MR4", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("NM1", {.width = 256, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
+  encodeFile("RG1", {.width = 1841, .height = 1955, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("RG2", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("RG3", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("SC1", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("XA1", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  decodeFile("CT1", iterations);
+  decodeFile("CT2", iterations);
+  decodeFile("MG1", iterations);
+  decodeFile("MR1", iterations);
+  decodeFile("MR2", iterations);
+  decodeFile("MR3", iterations);
+  decodeFile("MR4", iterations);
+  decodeFile("NM1", iterations);
+  decodeFile("RG1", iterations);
+  decodeFile("RG2", iterations);
+  decodeFile("RG3", iterations);
+  decodeFile("SC1", iterations);
+  decodeFile("XA1", iterations);
 
-    //encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, "test/fixtures/j2c/CT1.j2c");
-    return 0;
+  return 0;
 }
