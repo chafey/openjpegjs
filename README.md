@@ -45,6 +45,12 @@ To build native C/C++ version (inside docker shell):
 > scripts/native-build.sh
 ```
 
+Run performance test (inside docker shell):
+```
+> scripts/performance.sh
+```
+
+
 ## TODOS
 
 1) Fix openjpeg cmake issue that overrides output directory to be wrong

@@ -127,7 +127,15 @@ int main(int argc, char** argv) {
   encodeFile("RG2", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
   encodeFile("RG3", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
   encodeFile("SC1", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("US1", {.width = 640, .height = 480, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
+  encodeFile("VL1", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
+  encodeFile("VL2", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
+  encodeFile("VL3", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
+  encodeFile("VL4", {.width = 2226, .height = 1868, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
+  encodeFile("VL5", {.width = 2670, .height = 3340, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
+  encodeFile("VL6", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
   encodeFile("XA1", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+
   decodeFile("CT1", iterations);
   decodeFile("CT2", iterations);
   decodeFile("MG1", iterations);
@@ -140,6 +148,13 @@ int main(int argc, char** argv) {
   decodeFile("RG2", iterations);
   decodeFile("RG3", iterations);
   decodeFile("SC1", iterations);
+  decodeFile("US1", iterations);
+  decodeFile("VL1", iterations);
+  decodeFile("VL2", iterations);
+  decodeFile("VL3", iterations);
+  decodeFile("VL4", iterations);
+  decodeFile("VL5", iterations);
+  decodeFile("VL6", iterations);
   decodeFile("XA1", iterations);
 
   return 0;

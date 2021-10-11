@@ -1,4 +1,6 @@
 #!/bin/sh
+rm -rf build; scripts/wasm-build.sh
+rm -rf build-native; scripts/native-build.sh
 rm performance.csv
 echo "running native tests"
 (build-native/extern/openjpeg/bin/cpptest >> performance.csv)
