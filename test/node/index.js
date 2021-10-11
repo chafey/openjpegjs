@@ -2,88 +2,57 @@
 // SPDX-License-Identifier: MIT
 
 let openjpegjs = require('../../dist/openjpegjs.js');
-
+const codecHelper = require('./codec-helper.js')
 const fs = require('fs')
 
-function decode(openjpeg, encodedImagePath, iterations = 1) {
-  encodedBitStream = fs.readFileSync(encodedImagePath);
-  const numBytes = 500;
-  encodedBitStream = encodedBitStream.slice(0, encodedBitStream.length - numBytes);
-  console.log('encodedBitStream.length=', encodedBitStream.length);
-  const decoder = new openjpeg.J2KDecoder();
-  const encodedBuffer = decoder.getEncodedBuffer(encodedBitStream.length);
-  encodedBuffer.set(encodedBitStream);
-
-  // do the actual benchmark
-  const beginDecode = process.hrtime();
-  for(var i=0; i < iterations; i++) {
-    decoder.decode();
-  }
-  const decodeDuration = process.hrtime(beginDecode); // hrtime returns seconds/nanoseconds tuple
-  const decodeDurationInSeconds = (decodeDuration[0] + (decodeDuration[1] / 1000000000));
-  
-  // Print out information about the decode
-  console.log("Decode of " + encodedImagePath + " took " + ((decodeDurationInSeconds / iterations * 1000)) + " ms");
-  const frameInfo = decoder.getFrameInfo();
-  console.log('  frameInfo = ', frameInfo);
-  console.log(' imageOffset = ', decoder.getImageOffset());
-  var decoded = decoder.getDecodedBuffer();
-  console.log('  decoded length = ', decoded.length);
-
+function decodeFile(openjpeg, imageName, iterations = 1) {
+  const encodedImagePath = '../fixtures/j2k/' + imageName + ".j2k"
+  encodedBitStream = fs.readFileSync(encodedImagePath)
+  const decoder = new openjpeg.J2KDecoder()
+  const result = codecHelper.decode(decoder, encodedBitStream, iterations)
+  console.log("Decode of " + imageName + " took " +  result.decodeTimeMS + " ms (" + iterations + " iterations)");
   decoder.delete();
+  return result
 }
 
-function encode(openjpeg, pathToUncompressedImageFrame, imageFrame, pathToJ2CFile, iterations = 1) {
-    const uncompressedImageFrame = fs.readFileSync(pathToUncompressedImageFrame);
-    console.log('uncompressedImageFrame.length:', uncompressedImageFrame.length)
-    const encoder = new openjpeg.J2KEncoder();
-    const decodedBytes = encoder.getDecodedBuffer(imageFrame);
-    decodedBytes.set(uncompressedImageFrame);
-    //encoder.setQuality(false, 0.001);
-  
-    const encodeBegin = process.hrtime();
-    for(var i=0; i < iterations;i++) {
-      encoder.encode();
-    }
-    const encodeDuration = process.hrtime(encodeBegin);
-    const encodeDurationInSeconds = (encodeDuration[0] + (encodeDuration[1] / 1000000000));
-    
-    // print out information about the encode
-    console.log("Encode of " + pathToUncompressedImageFrame + " took " + ((encodeDurationInSeconds / iterations * 1000)) + " ms");
-    const encodedBytes = encoder.getEncodedBuffer();
-    console.log('  encoded length=', encodedBytes.length)
-  
-    if(pathToJ2CFile) {
-        //fs.writeFileSync(pathToJ2CFile, encodedBytes);
-    }
-    // cleanup allocated memory
-    encoder.delete();
-  }
-
-  //decode('../fixtures/j2k/CT1.j2k');
-  //decode('../fixtures/j2k/CT1.j2k');
+function encodeFile(openjpeg, imageName, imageFrame, iterations = 1) {
+  const pathToUncompressedImageFrame = '../fixtures/raw/' + imageName + ".RAW"
+  const uncompressedImageFrame = fs.readFileSync(pathToUncompressedImageFrame);
+  const encoder = new openjpeg.J2KEncoder();
+  //encoder.setQuality(false, 0.001);
+  const result = codecHelper.encode(encoder, uncompressedImageFrame, imageFrame, iterations)
+  console.log("Encode of " + imageName + " took " +  result.encodeTimeMS + " ms (" + iterations + " iterations)");
+  encoder.delete();
+  return result
+}
 
 function main(openjpeg) {
-  //decode('../fixtures/j2k/CT1-0decomp.j2k');
-  //decode('../fixtures/j2k/NM1.j2k');
-  decode(openjpeg, '../fixtures/j2k/CT1.j2k', 1);
-  //decode('../fixtures/j2k/image.j2k');
-  //decode('../../extern/OpenJPH/subprojects/js/html/test.j2c');
-
-  //encode('../fixtures/raw/CT1.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2k/CT1-new.j2k');
-  //encode('../fixtures/raw/CT2.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2c/CT2.j2c');
-  //encode('../fixtures/raw/MG1.RAW', {width: 3064, height: 4774, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/MG1.j2c');
-  //encode('../fixtures/raw/MR1.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2c/MR1.j2c');
-  //encode('../fixtures/raw/MR2.RAW', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/MR2.j2c');
-  //encode('../fixtures/raw/MR3.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2c/MR3.j2c');
-  //encode('../fixtures/raw/MR4.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/MR4.j2c');
-  //encode('../fixtures/raw/NM1.RAW', {width: 256, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: true}, '../fixtures/j2c/NM1.j2c');
-  //encode('../fixtures/raw/RG1.RAW', {width: 1841, height: 1955, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/RG1.j2c');
-  //encode('../fixtures/raw/RG1.RAW', {width: 1841, height: 1955, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/RG1.j2c');
-  //encode('../fixtures/raw/RG2.RAW', {width: 1760, height: 2140, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/RG2.j2c');
-  //encode('../fixtures/raw/RG3.RAW', {width: 1760, height: 1760, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/RG3.j2c');
-  //encode('../fixtures/raw/SC1.RAW', {width: 2048, height: 2487, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/SC1.j2c');
-  //encode('../fixtures/raw/XA1.RAW', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, '../fixtures/j2c/XA1.j2c');
+  const iterations = 1
+  encodeFile(openjpeg, 'CT1', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations)
+  encodeFile(openjpeg, 'CT2', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(openjpeg, 'MG1', {width: 3064, height: 4774, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'MR1', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(openjpeg, 'MR2', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'MR3', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(openjpeg, 'MR4', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'NM1', {width: 256, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(openjpeg, 'RG1', {width: 1841, height: 1955, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'RG2', {width: 1760, height: 2140, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'RG3', {width: 1760, height: 1760, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'SC1', {width: 2048, height: 2487, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(openjpeg, 'XA1', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  decodeFile(openjpeg, 'CT1', iterations)
+  decodeFile(openjpeg, 'CT2', iterations)
+  decodeFile(openjpeg, 'MG1', iterations)
+  decodeFile(openjpeg, 'MR2', iterations)
+  decodeFile(openjpeg, 'MR3', iterations)
+  decodeFile(openjpeg, 'MR4', iterations)
+  decodeFile(openjpeg, 'NM1', iterations)
+  decodeFile(openjpeg, 'RG1', iterations)
+  decodeFile(openjpeg, 'RG2', iterations)
+  decodeFile(openjpeg, 'RG3', iterations)
+  decodeFile(openjpeg, 'SC1', iterations)
+  decodeFile(openjpeg, 'XA1', iterations)
 }
 
 if(openjpegjs) {
