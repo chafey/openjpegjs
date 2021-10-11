@@ -8,12 +8,42 @@ NOTE - a forked version of OpenJPEG is currently used which has some changes to 
 
 Try it in your browser [here](https://chafey.github.io/openjpegjs/test/browser/index.html)
 
-## Initialize git submodules
+## Building
 
-This project depends on the charls library and references it using
-git submodules.  You must initialize it before building:
+This project uses git submodules to pull in OpenJPEG.  If developing, initialize the git submodules first:
 
+```
 > git submodule update --init --recursive
+```
+
+This project uses Docker to provide a consistent developer environment.
+
+Create docker container 'openjpegjsbuild'
+
+```
+> scripts/docker-build.sh
+```
+
+Create shell inside openjpegjsbuild container:
+
+```
+> scripts/docker-sh.sh
+```
+
+Install node 16 (inside docker shell):
+```
+> nvm install 16
+```
+
+To build WASM (inside docker shell):
+```
+> scripts/wasm-build.sh
+```
+
+To build native C/C++ version (inside docker shell):
+```
+> scripts/native-build.sh
+```
 
 ## TODOS
 
