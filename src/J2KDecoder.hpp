@@ -300,6 +300,7 @@ class J2KDecoder {
       tileSize_.width = cstr_info->tdx;
       tileSize_.height = cstr_info->tdy;
       numDecompositions_ = cstr_info->m_default_tile_info.tccp_info->numresolutions - 1;
+      opj_destroy_cstr_info(&cstr_info);
       
       // calculate the resolution at the requested decomposition level and
       // allocate destination buffer
