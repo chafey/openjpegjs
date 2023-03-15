@@ -6,6 +6,8 @@
 #include <stdint.h>
 
 struct FrameInfo {
+    FrameInfo() : width(0), height(0), bitsPerSample(0), componentCount(0), isSigned(false) {}
+
     /// <summary>
     /// Width of the image, range [1, 65535].
     /// </summary>
