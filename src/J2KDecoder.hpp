@@ -120,9 +120,9 @@ class J2KDecoder {
   /// HTJ2K encoded bitstream into the encoded buffer before calling this
   /// method, see getEncodedBuffer() and getEncodedBytes() above.
   /// </summary>
-  void decode() {
+  const bool decode() {
     decodeLayer_ = 0;
-    decode_i(0);
+    return decode_i(0);
   }
 
   /// <summary>
@@ -131,9 +131,9 @@ class J2KDecoder {
   /// buffer before calling this method, see getEncodedBuffer() and
   ///  getEncodedBytes() above.
   /// </summary>
-  void decodeSubResolution(size_t decompositionLevel, size_t decodeLayer) {
+  const bool decodeSubResolution(size_t decompositionLevel, size_t decodeLayer) {
     decodeLayer_ = decodeLayer;
-    decode_i(decompositionLevel);
+    return decode_i(decompositionLevel);
   }
 
   /// <summary>
@@ -218,7 +218,7 @@ class J2KDecoder {
 
   private:
 
-    void decode_i(size_t decompositionLevel) {
+    bool decode_i(size_t decompositionLevel) {
       opj_dparameters_t parameters;
       opj_codec_t* l_codec = NULL;
       opj_image_t* image = NULL;
@@ -255,7 +255,7 @@ class J2KDecoder {
           printf("[ERROR] opj_decompress: failed to setup the decoder\n");
           opj_stream_destroy(l_stream);
           opj_destroy_codec(l_codec);
-          return;
+          return false;
       }
       // disable strict mode so we can partially decode J2K streams
       opj_decoder_set_strict_mode(l_codec, OPJ_FALSE);
@@ -266,7 +266,7 @@ class J2KDecoder {
           opj_stream_destroy(l_stream);
           opj_destroy_codec(l_codec);
           opj_image_destroy(image);
-          return;
+          return false;
       }
       
       /* decode the image */
@@ -275,7 +275,7 @@ class J2KDecoder {
           opj_destroy_codec(l_codec);
           opj_stream_destroy(l_stream);
           opj_image_destroy(image);
-          return;
+          return false;
       }
 
       frameInfo_.width = image->x1; 
@@ -367,6 +367,8 @@ class J2KDecoder {
       opj_stream_destroy(l_stream);
       opj_destroy_codec(l_codec);
       opj_image_destroy(image);
+
+      return true;
     }
 
     std::vector<uint8_t> encoded_;
