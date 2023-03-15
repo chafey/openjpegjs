@@ -219,6 +219,8 @@ class J2KDecoder {
   private:
 
     void decode_i(size_t decompositionLevel) {
+      decoded_.clear();
+      
       opj_dparameters_t parameters;
       opj_codec_t* l_codec = NULL;
       opj_image_t* image = NULL;
