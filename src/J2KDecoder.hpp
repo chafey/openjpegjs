@@ -269,15 +269,6 @@ class J2KDecoder {
           return;
       }
       
-      /* decode the image */
-      if (!opj_decode(l_codec, l_stream, image)) {
-          printf("[ERROR] opj_decompress: failed to decode tile!\n");
-          opj_destroy_codec(l_codec);
-          opj_stream_destroy(l_stream);
-          opj_image_destroy(image);
-          return;
-      }
-
       frameInfo_.width = image->x1; 
       frameInfo_.height = image->y1;
       frameInfo_.componentCount = image->numcomps;
@@ -308,6 +299,15 @@ class J2KDecoder {
       const size_t bytesPerPixel = (frameInfo_.bitsPerSample + 8 - 1) / 8;
       const size_t destinationSize = sizeAtDecompositionLevel.width * sizeAtDecompositionLevel.height * frameInfo_.componentCount * bytesPerPixel;
       decoded_.resize(destinationSize);
+
+      /* decode the image */
+      if (!opj_decode(l_codec, l_stream, image)) {
+          printf("[ERROR] opj_decompress: failed to decode tile!\n");
+          opj_destroy_codec(l_codec);
+          opj_stream_destroy(l_stream);
+          opj_image_destroy(image);
+          return;
+      }
 
       // Convert from int32 to native size
       int comp_num;
