@@ -219,6 +219,8 @@ class J2KDecoder {
   private:
 
     void decode_i(size_t decompositionLevel) {
+      decoded_.clear();
+      
       opj_dparameters_t parameters;
       opj_codec_t* l_codec = NULL;
       opj_image_t* image = NULL;
@@ -269,15 +271,6 @@ class J2KDecoder {
           return;
       }
       
-      /* decode the image */
-      if (!opj_decode(l_codec, l_stream, image)) {
-          printf("[ERROR] opj_decompress: failed to decode tile!\n");
-          opj_destroy_codec(l_codec);
-          opj_stream_destroy(l_stream);
-          opj_image_destroy(image);
-          return;
-      }
-
       frameInfo_.width = image->x1; 
       frameInfo_.height = image->y1;
       frameInfo_.componentCount = image->numcomps;
@@ -300,6 +293,7 @@ class J2KDecoder {
       tileSize_.width = cstr_info->tdx;
       tileSize_.height = cstr_info->tdy;
       numDecompositions_ = cstr_info->m_default_tile_info.tccp_info->numresolutions - 1;
+      opj_destroy_cstr_info(&cstr_info);
       
       // calculate the resolution at the requested decomposition level and
       // allocate destination buffer
@@ -307,6 +301,15 @@ class J2KDecoder {
       const size_t bytesPerPixel = (frameInfo_.bitsPerSample + 8 - 1) / 8;
       const size_t destinationSize = sizeAtDecompositionLevel.width * sizeAtDecompositionLevel.height * frameInfo_.componentCount * bytesPerPixel;
       decoded_.resize(destinationSize);
+
+      /* decode the image */
+      if (!opj_decode(l_codec, l_stream, image)) {
+          printf("[ERROR] opj_decompress: failed to decode tile!\n");
+          opj_destroy_codec(l_codec);
+          opj_stream_destroy(l_stream);
+          opj_image_destroy(image);
+          return;
+      }
 
       // Convert from int32 to native size
       int comp_num;
