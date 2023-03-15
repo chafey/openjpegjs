@@ -115,26 +115,26 @@ void encodeFile(const char* imageName, const FrameInfo frameInfo, size_t iterati
 
 int main(int argc, char** argv) {
   const size_t iterations = (argc > 1) ? atoi(argv[1]) : 1;
-  encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
-  encodeFile("CT2", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
-  encodeFile("MG1", {.width = 3064, .height = 4774, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("MR1", {.width = 512, .height = 512, .bitsPerSample =  16, .componentCount = 1, .isSigned = true}, iterations);
-  encodeFile("MR2", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("MR3", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
-  encodeFile("MR4", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("NM1", {.width = 256, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = true}, iterations);
-  encodeFile("RG1", {.width = 1841, .height = 1955, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("RG2", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("RG3", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("SC1", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
-  encodeFile("US1", {.width = 640, .height = 480, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("VL1", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("VL2", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("VL3", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("VL4", {.width = 2226, .height = 1868, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("VL5", {.width = 2670, .height = 3340, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("VL6", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3, .isSigned = false}, iterations);
-  encodeFile("XA1", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1, .isSigned = false}, iterations);
+  encodeFile("CT1", FrameInfo(512, 512, 16, 1, true), iterations);
+  encodeFile("CT2", FrameInfo(512, 512, 16, 1, true), iterations);
+  encodeFile("MG1", FrameInfo(3064, 4774, 16, 1, false), iterations);
+  encodeFile("MR1", FrameInfo(512, 512,  16, 1, true), iterations);
+  encodeFile("MR2", FrameInfo(1024, 1024, 16, 1, false), iterations);
+  encodeFile("MR3", FrameInfo(512, 512, 16, 1, true), iterations);
+  encodeFile("MR4", FrameInfo(512, 512, 16, 1, false), iterations);
+  encodeFile("NM1", FrameInfo(256, 1024, 16, 1, true), iterations);
+  encodeFile("RG1", FrameInfo(1841, 1955, 16, 1, false), iterations);
+  encodeFile("RG2", FrameInfo(1760, 2140, 16, 1, false), iterations);
+  encodeFile("RG3", FrameInfo(1760, 1760, 16, 1, false), iterations);
+  encodeFile("SC1", FrameInfo(2048, 2487, 16, 1, false), iterations);
+  encodeFile("US1", FrameInfo(640, 480, 8, 3, false), iterations);
+  encodeFile("VL1", FrameInfo(756, 486, 8, 3, false), iterations);
+  encodeFile("VL2", FrameInfo(756, 486, 8, 3, false), iterations);
+  encodeFile("VL3", FrameInfo(756, 486, 8, 3, false), iterations);
+  encodeFile("VL4", FrameInfo(2226, 1868, 8, 3, false), iterations);
+  encodeFile("VL5", FrameInfo(2670, 3340, 8, 3, false), iterations);
+  encodeFile("VL6", FrameInfo(756, 486, 8, 3, false), iterations);
+  encodeFile("XA1", FrameInfo(1024, 1024, 16, 1, false), iterations);
 
   decodeFile("CT1", iterations);
   decodeFile("CT2", iterations);

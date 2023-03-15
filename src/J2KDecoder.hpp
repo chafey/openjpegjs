@@ -32,7 +32,7 @@ class J2KDecoder {
   /// Constructor for decoding a HTJ2K image from JavaScript.
   /// </summary>
   J2KDecoder() :
-  decodeLayer_(1)
+  decodeLayer_(1), numDecompositions_(0), isReversible_(false), progressionOrder_(0), numLayers_(0), colorSpace_(0)
   {
   }
 
