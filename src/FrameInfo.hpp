@@ -7,6 +7,8 @@
 
 struct FrameInfo {
     FrameInfo() : width(0), height(0), bitsPerSample(0), componentCount(0), isSigned(false) {}
+    FrameInfo(uint16_t w, uint16_t h, uint8_t bps, uint8_t cc, bool isSgn) :
+        width(w), height(h), bitsPerSample(bps), componentCount(cc), isSigned(isSgn) {}
 
     /// <summary>
     /// Width of the image, range [1, 65535].
